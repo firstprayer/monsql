@@ -24,7 +24,7 @@ import MySQLdb as mdb
 import types
 from logging import Logger
 from datetime import *
-from query import Query
+from query import Query, F
 from sql import build_select, build_update, build_delete, build_insert
 from queryset import QuerySet
 from exception import MySQLManagerException
@@ -98,11 +98,11 @@ class MySQLManager:
     def commit(self):
         self._log_("Committing")
         self.db.commit()
-
+        return self
     """
     Set the source of the query
     """
-    def source(self, source):
+    def set_source(self, source):
         self.source = source
         return self
 
@@ -150,17 +150,6 @@ class MySQLManager:
     def insert(self, attributes):
         self._check_source_to_be_table_name()
         sql = build_insert(self.source, attributes)
-        # sql = "INSERT INTO %s" %(self.table_name)
-        # column_str = ""
-        # value_str = ""
-        # for index, (key, value) in enumerate(attributes.items()):
-        #     if index > 0:
-        #         column_str += ","
-        #         value_str += ","
-        #     column_str += key
-        #     value_str += tosqlstr(value)
-        # sql = sql + "(%s) VALUES(%s)" %(column_str, value_str)
-        # print sql
         self.cursor.execute(sql)
         return True
 
@@ -173,20 +162,6 @@ class MySQLManager:
         self._check_source_to_be_table_name()
 
         sql = build_update(self.source, query, attributes)
-        # sql = "UPDATE %s SET " %(self.table_name)
-        
-        # set_str = ""
-        # for index, (key, value) in enumerate(attributes.items()):
-        #     if index > 0:
-        #         set_str += ","
-        #     set_str += key + "=" + tosqlstr(value)
-
-        # query_str = build_query(query)
-        # if query_str:
-        #     query_str = " WHERE " + query_str
-        # else:
-        #     query_str = ""
-        # sql = sql + set_str + query_str
         print sql
         self.cursor.execute(sql)
 

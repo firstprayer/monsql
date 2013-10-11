@@ -19,6 +19,7 @@ class QuerySet:
     def __len__(self):
         if not self._data or self._need_to_refetch_data:
             self._fetch_data()
+        print self._data
         return len(self._data)
 
     def __iter__(self):
@@ -34,6 +35,7 @@ class QuerySet:
     def _fetch_data(self):
         print "fetching data"
         sql = build_select(self.query)
+        print sql
         self.cursor.execute(sql)
         # Wrap the data into dictionaries
         data_list = self.cursor.fetchall()

@@ -2,7 +2,7 @@ from query import *
 from datetime import *
 import types
 from exception import MySQLManagerException
-
+import uuid
 """
 TODO: Support more types
 """
@@ -15,6 +15,8 @@ def tosqlstr(v):
         return "'%s'" %(v.strftime("%Y-%m-%d %H:%M:%S"))
     if isinstance(v, date):
         return "'%s'" %(v.strftime("%Y-%m-%d"))
+    if isinstance(v, F):
+        return v.field_name
     return str(v)
 
 
@@ -51,9 +53,15 @@ def build_select_query(table_name, values, query, sort=None):
     sql = """SELECT %s FROM %s %s""" %(value_str, table_name, query_str)
     return sql
 
-
+# TODO: Allow user to give the subquery an alias
 def build_select(query_obj):
-    return build_select_query(query_obj.source, query_obj.fields, query_obj.filter)
+    source = query_obj.source
+    if isinstance(source, Query):
+        if not hasattr(source, "alias"):
+            raise MySQLManagerException("Using subquery as source requires an alias!")
+            return
+        source = "(%s) as %s" %(build_select(source), source.alias)
+    return build_select_query(source, query_obj.fields, query_obj.filter)
 
 def build_insert(table_name, attributes):
     sql = "INSERT INTO %s" %(table_name)
