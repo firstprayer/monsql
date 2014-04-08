@@ -19,7 +19,7 @@ class QuerySet:
     def __len__(self):
         if not self._data or self._need_to_refetch_data:
             self._fetch_data()
-        print self._data
+        # print self._data
         return len(self._data)
 
     def __iter__(self):
@@ -33,9 +33,9 @@ class QuerySet:
         return self._data[k]
 
     def _fetch_data(self):
-        print "fetching data"
+        # print "fetching data"
         sql = build_select(self.query)
-        print sql
+        # print sql
         self.cursor.execute(sql)
         # Wrap the data into dictionaries
         data_list = self.cursor.fetchall()
@@ -52,10 +52,23 @@ class QuerySet:
         self._need_to_refetch_data = False
 
     def filter(self, filter):
-        self._need_to_refetch_data = True
-        pass
+        new_query_set = self.clone()
+	# self._need_to_refetch_data = True
+        # for key, value in filter.items():
+        new_query_set.query.set_filter_fields(filter)
+        
+        return new_query_set
+
+    def clone(self):
+        return QuerySet(cursor=self.cursor, query=self.query.clone())
+
+    def exists(self):
+        return len(self) > 0
 
     def sort(self, sort):
         self._need_to_refetch_data = True
-        pass
+        raise Exception('NOT IMPLEMENTED')
+
+    def values(self):
+        return [v for v in self]
 

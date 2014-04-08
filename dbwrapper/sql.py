@@ -19,19 +19,35 @@ def tosqlstr(v):
         return v.field_name
     return str(v)
 
+def from_none_to_null(v):
+    if v: return v
+    return u'null'
 
 def build_query(query):
     query_str = ""
     if query and len(query.items()) > 0:
         for index, (key, value) in enumerate(query.items()):
             if index > 0:
-                query_str += " and "
+                query_str += u" and "
             if type(value) is types.DictType:
-                if "$contains" in value.keys():
-                    query_str += key + " LIKE %" + str(value) + "%"
-                else:
-                    raise MySQLManagerException("Unsupport complex query")
-            query_str += key + "=" + tosqlstr(value)
+                for complex_key in value.keys():
+                    if u"$contains" == complex_key:
+                        query_str += key + u" LIKE '%" + str(value[complex_key]) + u"%' "
+                    elif u'$in' == complex_key:
+                        if len(value[complex_key]) == 0:
+                            query_str += key + u" IN (null) "
+                        else:
+                            query_str += key + u" IN (" + u','.join([str(_v_) for _v_ in value[complex_key]]) + u") "
+                    elif u'$notIn' == complex_key:
+                        if len(value[complex_key]) == 0:
+                            query_str += key + u" NOT IN (null) "
+                        else:
+                            query_str += key + u" NOT IN (" + u','.join([str(_v_) for _v_ in value[complex_key]]) + u") "
+                    else:
+                        raise MySQLManagerException(u"Unsupport complex query")
+            else:
+                query_str += key + u"=" + tosqlstr(from_none_to_null(value))
+
         return query_str
     else:
         return None
@@ -42,61 +58,62 @@ def build_select_query(table_name, values, query, sort=None):
         if index == 0:
             value_str = field
         else:
-            value_str += "," + field
+            value_str += u"," + field
 
     # Where clause
     query_str = build_query(query)
     if query_str:
-        query_str = "WHERE " + query_str
+        query_str = u"WHERE " + query_str
     else:
         query_str = ""
-    sql = """SELECT %s FROM %s %s""" %(value_str, table_name, query_str)
+    sql = u"""SELECT %s FROM %s %s""" %(value_str, table_name, query_str)
+    # sprint sql
     return sql
 
 # TODO: Allow user to give the subquery an alias
 def build_select(query_obj):
     source = query_obj.source
     if isinstance(source, Query):
-        if not hasattr(source, "alias"):
-            raise MySQLManagerException("Using subquery as source requires an alias!")
+        if not hasattr(source, u"alias"):
+            raise MySQLManagerException(u"Using subquery as source requires an alias!")
             return
-        source = "(%s) as %s" %(build_select(source), source.alias)
+        source = u"(%s) as %s" %(build_select(source), source.alias)
     return build_select_query(source, query_obj.fields, query_obj.filter)
 
 def build_insert(table_name, attributes):
     sql = "INSERT INTO %s" %(table_name)
-    column_str = ""
-    value_str = ""
+    column_str = u""
+    value_str = u""
     for index, (key, value) in enumerate(attributes.items()):
         if index > 0:
-            column_str += ","
-            value_str += ","
+            column_str += u","
+            value_str += u","
         column_str += key
         value_str += tosqlstr(value)
-    sql = sql + "(%s) VALUES(%s)" %(column_str, value_str)
+    sql = sql + u"(%s) VALUES(%s)" %(column_str, value_str)
     return sql
 
 def build_delete(table_name, filter):
     query_str = build_query(filter)
     if not query_str:
-        query_str = ""
+        query_str = u""
     else:
-        query_str = "WHERE " + query_str
-    sql = "DELETE FROM %s %s" %(table_name, query_str)
+        query_str = u"WHERE " + query_str
+    sql = u"DELETE FROM %s %s" %(table_name, query_str)
     return sql
 
 def build_update(table_name, filter, attributes):
-    sql = "UPDATE %s SET " %(table_name)    
-    set_str = ""
+    sql = u"UPDATE %s SET " %(table_name)    
+    set_str = u""
     for index, (key, value) in enumerate(attributes.items()):
         if index > 0:
-            set_str += ","
-        set_str += key + "=" + tosqlstr(value)
+            set_str += u","
+        set_str += key + u"=" + tosqlstr(value)
 
     query_str = build_query(filter)
     if query_str:
-        query_str = " WHERE " + query_str
+        query_str = u" WHERE " + query_str
     else:
-        query_str = ""
+        query_str = u""
     sql = sql + set_str + query_str
     return sql

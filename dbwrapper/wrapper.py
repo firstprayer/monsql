@@ -85,7 +85,7 @@ class MySQLManager:
     def _fetch_columns(self):
         self._check_source_to_be_table_name()
         if type(self.source) is types.StringType:
-            sql = "SHOW COLUMNS FROM %s" %(self.source)
+            sql = u"SHOW COLUMNS FROM %s" %(self.source)
             self.cursor.execute(sql)
             columns = []
             for column in self.cursor.fetchall():
@@ -93,7 +93,7 @@ class MySQLManager:
                 columns.append(column)
             self.columns = columns
         else:
-            raise MySQLManagerException("Columns Unknown for non-table-name source")
+            raise MySQLManagerException(u"Columns Unknown for non-table-name source")
 
     def commit(self):
         self._log_("Committing")
@@ -104,6 +104,7 @@ class MySQLManager:
     """
     def set_source(self, source):
         self.source = source
+        self.columns = None
         return self
 
     """
@@ -162,7 +163,7 @@ class MySQLManager:
         self._check_source_to_be_table_name()
 
         sql = build_update(self.source, query, attributes)
-        print sql
+        # print sql
         self.cursor.execute(sql)
 
         return True
