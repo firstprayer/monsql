@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
 
-setup(name='dbwrapper',
+setup(name='monsql',
       version='0.1',
       packages = find_packages(),
       author='firstprayer',
-      email='zhangty10@gmail.com'
+      author_email='zhangty10@gmail.com',
+      url='https://github.com/firstprayer/python-mysql-wrapper.git',
       # package_dir={'dbwrapper': 'dbwrapper'},
 )
