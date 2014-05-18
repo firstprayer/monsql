@@ -32,6 +32,8 @@ def build_query(query):
     query_str = ""
     if query and len(query.items()) > 0:
         for index, (key, value) in enumerate(query.items()):
+            if key in ('index',):
+                key = "'%s'" %(key)
             if index > 0:
                 query_str += u" and "
             if type(value) is types.DictType:
@@ -62,6 +64,9 @@ def build_query(query):
 def build_select_query(table_name, values, query, sort=None):
     value_str = ""
     for index, field in enumerate(values):
+        if field in ('index',):
+            field = "'%s'" %(field)
+            
         if index == 0:
             value_str = field
         else:

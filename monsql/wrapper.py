@@ -20,8 +20,6 @@ We plan to Support Table join
 We would also support subquery
 """
 from config import ASCENDING, DESCENDING
-import chardet
-
 import MySQLdb as mdb
 import types
 from logging import Logger
