@@ -24,10 +24,10 @@ import MySQLdb as mdb
 import types
 from logging import Logger
 from datetime import *
-from query import Query, F
+from query import Query
 from sql import build_select, build_update, build_delete, build_insert
 from queryset import QuerySet
-from exception import MySQLManagerException
+from exception import MonSQLException
 
 class TRANSACTION_MODE:
     AUTO = "auto"
@@ -71,7 +71,7 @@ class MySQLManager:
 
     def _check_source(self):
         if not self.source:
-            raise MySQLManagerException("Source is not defined")
+            raise MonSQLException("Source is not defined")
 
     def _check_source_to_be_table_name(self):
         pass
@@ -94,7 +94,7 @@ class MySQLManager:
                 columns.append(column)
             self.columns = columns
         else:
-            raise MySQLManagerException(u"Columns Unknown for non-table-name source")
+            raise MonSQLException(u"Columns Unknown for non-table-name source")
 
     def commit(self):
         # self._log_("Committing")
@@ -188,8 +188,7 @@ class MySQLManager:
                 return self.insert(attributes)
 
         sql = build_update(self.source, query, attributes)
-        self.cursor.execute(sql)
-        return True
+        return self.cursor.execute(sql)
 
 
     """
@@ -198,12 +197,11 @@ class MySQLManager:
     """
     def remove(self, filter=None):
         if isinstance(self.source, Query):
-            raise MySQLManagerException('CANNOT REMOVE ROW FROM SUBQUERY')
+            raise MonSQLException('CANNOT REMOVE ROW FROM SUBQUERY')
         self._check_source_to_be_table_name()
-        sql = build_delete(table_name=self.source, filter=filter)
+        sql = build_delete(table_name=self.source, condition=filter)
         # print sql
-        self.cursor.execute(sql)
-        return True 
+        return self.cursor.execute(sql)
 
 
 class MonSQL:
@@ -223,3 +221,9 @@ class MonSQL:
     def _create_manager_(self, name):
         manager = MySQLManager(db=self.db, source=name)
         return manager
+
+    def set_foreign_key_check(self, to_check):
+        if to_check:
+            self.db.cursor().execute('SET foreign_key_checks = 1;')
+        else:
+            self.db.cursor().execute('SET foreign_key_checks = 0;')

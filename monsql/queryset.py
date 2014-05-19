@@ -20,7 +20,6 @@ class QuerySet:
     def __len__(self):
         if not self._data or self._need_to_refetch_data:
             self._fetch_data()
-        # print self._data
         return len(self._data)
 
     def __iter__(self):
@@ -34,7 +33,6 @@ class QuerySet:
         return self._data[k]
 
     def _fetch_data(self):
-        # print "fetching data"
         sql = build_select(self.query)
         # print sql
         self.cursor.execute(sql)
@@ -54,8 +52,6 @@ class QuerySet:
 
     def filter(self, filter):
         new_query_set = self.clone()
-	# self._need_to_refetch_data = True
-        # for key, value in filter.items():
         new_query_set.query.set_filter_fields(filter)
         
         return new_query_set
