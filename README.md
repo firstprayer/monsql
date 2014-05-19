@@ -1,4 +1,4 @@
-python-mysql-wrapper
+MonSQL - Mongodb-style way for using mysql
 ====================
 A mysql wrapper for easy interaction with MySQL using a mongodb-like interface. It's motivated by the fact that mongodb is so easy to use, even for a complete novince! This library is suitable for people don't know much about SQL syntax, but they can still manipulate mysql database through this very simple mongodb-style interface -- query, insert, update, all very easy to understand.  
 
