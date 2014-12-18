@@ -2,6 +2,7 @@
 
 import copy, types
 from datetime import datetime, date
+from exception import MonSQLException
 
 """
 TODO: When using Query as source, not defining fields will lead to some problem, try to fix it
@@ -15,7 +16,7 @@ class Query:
         self.limit = limit
         self.skip  = skip
         self.alias = alias
-        
+
     def clone(self):
         return Query(source=copy.deepcopy(self.source), 
                  filter=copy.deepcopy(self.filter), 
@@ -136,10 +137,10 @@ class QueryCondition:
 
                         query_str = None
                         if u"$contains" == match_key:
-                            query_str = u"LIKE '%" + value_to_sql_str(match_value) + u"%'"
+                            query_str = u"LIKE " + value_to_sql_str('%' + match_value + '%')
 
                         elif match_key in ('$eq', '$gte', '$gt', '$lt', '$lte'):
-                            map_dic = {'$eq': '=', '$gte': '>=', '$gt': '>', '$lt': '<', '$lte': '>'}
+                            map_dic = {'$eq': '=', '$gte': '>=', '$gt': '>', '$lt': '<', '$lte': '<='}
                             query_str = map_dic[match_key] + value_to_sql_str(match_value)
 
                         elif u'$in' == match_key:
@@ -148,7 +149,7 @@ class QueryCondition:
                             else:
                                 query_str = u"IN (" + u','.join([str(_v_) for _v_ in match_value]) + u") "
                         else:
-                            raise MonSQLException(u"Unsupport complex query")
+                            raise MonSQLException(u"Unsupport complex query: %s" %(match_key))
 
                         return query_field + ' ' + query_str
         else:

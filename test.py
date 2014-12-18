@@ -80,6 +80,19 @@ class MonSQLBasicTest(BaseTestCase):
 			self.table_a.insert({"name": "jude" + str(i), "number": i, "datetime": datetime.now(), "date": date.today(), "double_number": 4.33333})
 		self.monsql.commit()
 
+	def test_complex_queries(self):
+		self._insert_some_row_to_table_one(10)
+
+		self.assertEquals(len(self.table_a.find({})), 10)
+		self.assertEquals(len(self.table_a.find({'number': {'$gte': 1}})), 9)
+		self.assertEquals(len(self.table_a.find({'number': {'$gt': 1}})), 8)
+		self.assertEquals(len(self.table_a.find({'number': {'$lt': 1}})), 1)
+		self.assertEquals(len(self.table_a.find({'number': {'$lte': 1}})), 2)
+		self.assertEquals(len(self.table_a.find({'number': {'$eq': 1}})), 1)
+		self.assertEquals(len(self.table_a.find({'number': {'$in': [1, 11]}})), 1)
+
+		self.assertEquals(len(self.table_a.find({'name': {'$contains': 'de0'}})), 1)
+
 	def test_insert(self):
 		# Test findall, findone
 		self._insert_some_row_to_table_one(10)
