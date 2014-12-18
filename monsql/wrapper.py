@@ -95,10 +95,7 @@ class Table:
 
         return count
 
-    def truncate(self):
-        self.cursor.execute('TRUNCATE TABLE %s' %self.name)
-        self.db.commit()
-
+    
     
     def find(self, filter={}, fields=None, skip=0, limit=None, sort=None):
         """
@@ -277,4 +274,9 @@ class MonSQL:
 
         self.__cursor.execute('DROP TABLE IF EXISTS %s' %(tablename))
         self.__db.commit()
+
+    def truncate_table(self, tablename):
+        self.__cursor.execute('TRUNCATE TABLE %s' %tablename)
+        self.__db.commit()
+
 

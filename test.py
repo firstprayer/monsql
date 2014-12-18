@@ -32,7 +32,7 @@ class MonSQLMetaOperationTest(BaseTestCase):
 
 		print table_obj.count()
 		assert table_obj.count() == 10
-		table_obj.truncate()
+		self.monsql.truncate_table(tablename)
 		assert table_obj.count() == 0
 
 		is_exception_raised = False

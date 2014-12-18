@@ -51,5 +51,5 @@ See? It's just that easy.
 **Update:** now support create/drop operations:
 
 	db.create_table('test_table', [('id INT NOT NULL', 'name VARCHAR(50)')])
-	db.get('test_table').truncate()
+	db.truncate_table('test_table')
 	db.drop_table('test_table')
