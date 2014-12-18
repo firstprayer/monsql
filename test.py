@@ -84,14 +84,31 @@ class MonSQLBasicTest(BaseTestCase):
 		self._insert_some_row_to_table_one(10)
 
 		self.assertEquals(len(self.table_a.find({})), 10)
-		self.assertEquals(len(self.table_a.find({'number': {'$gte': 1}})), 9)
-		self.assertEquals(len(self.table_a.find({'number': {'$gt': 1}})), 8)
-		self.assertEquals(len(self.table_a.find({'number': {'$lt': 1}})), 1)
-		self.assertEquals(len(self.table_a.find({'number': {'$lte': 1}})), 2)
-		self.assertEquals(len(self.table_a.find({'number': {'$eq': 1}})), 1)
-		self.assertEquals(len(self.table_a.find({'number': {'$in': [1, 11]}})), 1)
 
-		self.assertEquals(len(self.table_a.find({'name': {'$contains': 'de0'}})), 1)
+		filters_and_expected_row_nums = [
+			({'number': {'$gte': 1}}, 9),
+			({'number': {'$gt': 1}}, 8),
+			({'number': {'$lt': 1}}, 1),
+			({'number': {'$lte': 1}}, 2),
+			({'number': {'$eq': 1}}, 1),
+			({'number': {'$in': [1, 11]}}, 1),
+			({'name': {'$contains': 'de0'}}, 1),
+		]
+
+		for filter, row_num in filters_and_expected_row_nums:
+			self.assertEqual(len(self.table_a.find(filter)), row_num)
+			self.assertEqual(len(self.table_a.find({'$not': filter})), 10 - row_num)
+
+		composite_filters_and_expected_row_nums = [
+			({'$and': [{'name': 'jude0'}, {'number': 0}]}, 1),
+			({'$and': [{'name': 'jude0'}, {'number': 1}]}, 0),
+			({'$or': [{'name': 'jude0'}, {'number': 0}]}, 1),
+			({'$or': [{'name': 'jude0'}, {'number': 1}]}, 2),
+		]
+
+		for filter, row_num in composite_filters_and_expected_row_nums:
+			self.assertEqual(len(self.table_a.find(filter)), row_num)
+
 
 	def test_insert(self):
 		# Test findall, findone

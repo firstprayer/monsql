@@ -91,30 +91,30 @@ class QueryCondition:
 
                 if query_field in QueryCondition.COMPLEX_QUERY_INDICATOR:
 
-                    if u'$not' == query_key:
+                    if u'$not' == query_field:
                         not_condition = QueryCondition(query_value).to_sql()
                         if not_condition is not None:
                             return '!(%s)' %(not_condition)
                         else:
                             return None
 
-                    if query_key in (u'$or', u'$and', ):
+                    if query_field in (u'$or', u'$and', ):
                         conditions = query_value
                         if not isinstance(conditions, list) or len(conditions) < 2:
-                            raise MonSQLException('QUERY VALUE FOR KEY %s MUST BE LIST WITH LENGTH BEING AT LEAST 2' %(query_key))
+                            raise MonSQLException('QUERY VALUE FOR KEY %s MUST BE LIST WITH LENGTH BEING AT LEAST 2' %(query_field))
 
                         conditions = map(lambda c: QueryCondition(c).to_sql(), conditions)
                         conditions = filter(lambda c: c is not None, conditions)
 
                         if len(conditions) > 0:
-                            if query_key == u'$or':
+                            if query_field == u'$or':
                                 return ' OR '.join(conditions)
-                            elif query_key == u'$and':
+                            elif query_field == u'$and':
                                 return ' AND '.join(conditions)
                         else:
                             return None
                     else:
-                        raise Exception('Unsupport query_key')
+                        raise Exception('Unsupport query_field')
                 else:
                     if query_field in QueryCondition.MYSQL_RESERVE_WORDS:
                         query_field = "'%s'" %(query_field)
