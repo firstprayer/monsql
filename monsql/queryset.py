@@ -2,6 +2,23 @@
 
 from query import Query
 from sql import build_select
+from exception import MonSQLException
+
+class DataRow:
+
+    def __init__(self, keyvalue_map):
+        self.data = keyvalue_map
+
+    def __getattr__(self, attrname):
+        if self.data.has_key(attrname):
+            return self.data[attrname]
+        else:
+            raise AttributeError('%s does not exist' %attrname)
+
+    def __setattr(self, attrname, value):
+        self.data[attrname] = value
+
+
 
 """
 Lazy load data
@@ -33,6 +50,7 @@ class QuerySet:
         return self._data[k]
 
     def _fetch_data(self):
+
         sql = build_select(self.query)
         # print sql
         self.cursor.execute(sql)
@@ -45,7 +63,7 @@ class QuerySet:
             result = {}
             for i in range(len(data)):
                 result[values[i]] = data[i]
-            result_list.append(result)
+            result_list.append(DataRow(result))
 
         self._data = result_list
         self._need_to_refetch_data = False

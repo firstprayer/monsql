@@ -14,7 +14,8 @@ def from_none_to_null(v):
 def build_query(query):
     return QueryCondition(query).to_sql()
 
-def build_select_query(table_name, values, query, sort=None):
+def build_select_query(table_name, values, query, sort=None, skip=0, limit=None):
+
     value_str = ""
     for index, field in enumerate(values):
         if field in ('index',):
@@ -46,18 +47,17 @@ def build_select_query(table_name, values, query, sort=None):
             sort_strings.append(sort_str)
 
         sql = '''%s ORDER BY %s''' %(sql, ','.join(sort_strings))
+
+    if limit is not None:
+        sql = '%s LIMIT %d,%d' %(sql, skip, limit)
+
     # sprint sql
     return sql
 
 # TODO: Allow user to give the subquery an alias
 def build_select(query_obj):
-    source = query_obj.source
-    if isinstance(source, Query):
-        if not hasattr(source, u"alias"):
-            raise MonSQLException(u"Using subquery as source requires an alias!")
-            return
-        source = u"(%s) as %s" %(build_select(source), source.alias)
-    return build_select_query(source, query_obj.fields, query_obj.filter, query_obj.sort)
+    return build_select_query(query_obj.source, query_obj.fields, query_obj.filter, skip=query_obj.skip, \
+                              limit=query_obj.limit, sort=query_obj.sort)
 
 def build_insert(table_name, attributes):
     sql = "INSERT INTO %s" %(table_name)

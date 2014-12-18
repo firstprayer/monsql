@@ -20,7 +20,7 @@ We plan to Support Table join
 We would also support subquery
 """
 from config import ASCENDING, DESCENDING
-import MySQLdb as mdb
+import MySQLdb
 import types
 from logging import Logger
 from datetime import *
@@ -35,30 +35,20 @@ class TRANSACTION_MODE:
     DEFAULT = "manual"
   
 
-"""
-This is a mongodb style MySQL Wrapper
-Usage:
-manager = MySQLManager(db=a MySQLdb db instance, source=source, mode=transaction_mode)
-
-select: result = manager.find({"id": 1})
-insert: manager.insert({"name": "xxx"})
-update: manager.update({"name": "xxx"}, {"name": "xxxx"})
-delete: manager.remove({"id": 2})
-
-Setting source: manager.source(new_source), a source could be a string(table name), or a query object
-
-Notice, in the DEFAULT case, one need to manually call manager.commit() after insert/update/delete
-"""
-
-class MySQLManager:
-    def __init__(self, db, source=None, mode=None):
+class Table:
+    """
+    Usage:
+    select: result = manager.find({"id": 1})
+    insert: manager.insert({"name": "xxx"})
+    update: manager.update({"name": "xxx"}, {"name": "xxxx"})
+    delete: manager.remove({"id": 2})
+    """
+    def __init__(self, db, name, mode=None):
         self.db = db
         self.cursor = db.cursor()
         self.columns = None
-        if source:
-            self.source = source
-        else:
-            self.source = None
+        self.name = name
+
         if mode:
             self.transaction_mode = mode
         else:
@@ -69,94 +59,88 @@ class MySQLManager:
     def _log_(self, log_info):
         print log_info
 
-    def _check_source(self):
-        if not self.source:
-            raise MonSQLException("Source is not defined")
-
-    def _check_source_to_be_table_name(self):
-        pass
-        # if not self.source or type(self.source) is not types.StringType:
-        #     raise MySQLManagerException("Source is illegel")
-
-    def _ensure_columns(self):
+    def __ensure_columns(self):
         if self.columns:
             return True
-        self._fetch_columns()
+        self.__fetch_columns()
 
-    def _fetch_columns(self):
-        self._check_source_to_be_table_name()
-        if type(self.source) is types.StringType:
-            sql = u"SHOW COLUMNS FROM %s" %(self.source)
-            self.cursor.execute(sql)
-            columns = []
-            for column in self.cursor.fetchall():
-                column = column[0]
-                columns.append(column)
-            self.columns = columns
-        else:
-            raise MonSQLException(u"Columns Unknown for non-table-name source")
+    def __fetch_columns(self):
+        sql = u"SHOW COLUMNS FROM %s" %(self.name)
+        self.cursor.execute(sql)
+        columns = []
+        for column in self.cursor.fetchall():
+            column = column[0]
+            columns.append(column)
+        self.columns = columns
 
     def commit(self):
-        # self._log_("Committing")
         self.db.commit()
         return self
-    """
-    Set the source of the query
-    """
-    def set_source(self, source):
-        self.source = source
-        self.columns = None
-        return self
+    
+    def count(self, distinct=False, distinct_fields=None):
+        if distinct_fields is None:
+            field = '*'
+        else:
+            field = ','.join(distinct_fields)
 
-    """
-    @param:query(dict), specify the WHERE clause
-    {"name": "...", "id": ...}
-    @param: fields, specify what fields are needed
-    @return a QuerySet object
-    """
-    def find(self, filter=None, fields=None, skip=0, limit=0, sort=None):
+        if distinct:
+            count_str = 'DISTINCT(%s)' %(field)
+        else:
+            count_str = field
+        count_str = 'COUNT(%s)' %(count_str)
+
+        sql = 'SELECT %s FROM %s' %(count_str, self.name)
+        self.cursor.execute(sql)
+        count = self.cursor.fetchone()[0]
+
+        return count
+
+    def truncate(self):
+        self.cursor.execute('TRUNCATE TABLE %s' %self.name)
+        self.db.commit()
+
+    
+    def find(self, filter={}, fields=None, skip=0, limit=None, sort=None):
+        """
+        @param:query(dict), specify the WHERE clause
+        {"name": "...", "id": ...}
+        @param: fields, specify what fields are needed
+        skip, limit: both integers, skip without defining limit is meaningless
+        @return a QuerySet object
+        """
         if not fields:
-            self._ensure_columns()
+            self.__ensure_columns()
             fields = self.columns
-        query_obj = Query(source=self.source, filter=filter, fields=fields, sort=sort)
+
+        query_obj = Query(source=self.name, filter=filter, fields=fields, skip=skip, limit=limit, sort=sort)
         return QuerySet(cursor=self.cursor, query=query_obj)
 
-    """
-    similar to find
-    @param: query(dict)
-    @param: values: specifying what attributes are needed
-    @return: a dict contains all the attributes or None if the query fail
-    """
-    def find_one(self, filter=None, fields=None):
-        if not fields:
-            self._ensure_columns()
-            fields = self.columns
+    
+    def find_one(self, filter=None, fields=None, skip=0, sort=None):
+        """
+        similar to find
+        @param: query(dict)
+        @param: values: specifying what attributes are needed
+        @return: a RowData contains all the attributes or None if the query fail
+        """
+        result = self.find(filter=filter, fields=fields, skip=skip, limit=1, sort=sort)
+        if len(result) > 0:
+            return result[0]
+        else:
+            return None
 
-        query_obj = Query(source=self.source, filter=filter, fields=fields)
-        sql = build_select(query_obj)
-
-        self.cursor.execute(sql)
-        data = self.cursor.fetchone()
-        if not data:
-            return data
-        assert(len(data) == len(fields))
-        result = {}
-        for i in range(len(data)):
-            result[fields[i]] = data[i]
-        return result
-
-    """
-    @param:attributes(dict), specify the values clause
-    @return success or not (boolean)
-    """
+    
     def insert(self, data_or_list_of_data):
-        self._check_source_to_be_table_name()
+        """
+        @param:attributes(dict), specify the values clause
+        @return: id or list of ids of inserted row
+        """
         result = None
 
         def insert_data(data):
-            sql = build_insert(self.source, data)
+            sql = build_insert(self.name, data)
             row_count = self.cursor.execute(sql)
-            # print sql.decode(chardet.detect(sql))
+
             if row_count:
                 return self.cursor.lastrowid
             else:
@@ -180,14 +164,13 @@ class MySQLManager:
     @return success or not (boolean)
     """
     def update(self, query, attributes, upsert=False):
-        self._check_source_to_be_table_name()
 
         if upsert:
             found_result = self.find_one(query)
             if not found_result:
                 return self.insert(attributes)
 
-        sql = build_update(self.source, query, attributes)
+        sql = build_update(self.name, query, attributes)
         return self.cursor.execute(sql)
 
 
@@ -196,34 +179,102 @@ class MySQLManager:
     @return success or not(boolean)
     """
     def remove(self, filter=None):
-        if isinstance(self.source, Query):
-            raise MonSQLException('CANNOT REMOVE ROW FROM SUBQUERY')
-        self._check_source_to_be_table_name()
-        sql = build_delete(table_name=self.source, condition=filter)
-        # print sql
+        sql = build_delete(table_name=self.name, condition=filter)
         return self.cursor.execute(sql)
 
 
 class MonSQL:
-    def __init__(self, db):
-        self.db = db
-        self.manager_map = {}
+    """
+    Usage:
+    monsql = MonSQL(host, port, username, password, dbname)
+    Notice, in the DEFAULT case, one need to manually call monsql.commit() after insert/update/delete
+    """
 
-    def __getattr__(self, name):
-        if not self.manager_map.has_key(name):
-            self.manager_map[name] = self._create_manager_(name)
+    def __init__(self, host='127.0.0.1', port=3306, username='', password='', dbname='test', mode=TRANSACTION_MODE.DEFAULT):
+        self.__db = MySQLdb.Connect(host=host, port=port, user=username, passwd=password, db=dbname)
+        self.__cursor = self.__db.cursor()
+        self.__table_map = {}
+        # self.__binded_map  = {}
+        self.__mode = mode
 
-        return self.manager_map[name]
+    def __ensure_table_obj(self, name):
+        if not self.__table_map.has_key(name):
+            self.__table_map[name] = self.__create_table_obj(name)
+
+    # def bind(self, name):
+    #     """
+    #     Bind a table name so that one can get the manager object simply by using monsql.TABLE_NAME instead
+    #     of using monsql.get(TABLE_NAME)
+    #     """
+    #     if hasattr(self, name):
+    #         raise MonSQLException('TABLE NAME CONFLICTS, PLEASE USE .get(...)')
+    #     self.__binded_map[name] = self.get(name)
+
+    def get(self, name):
+        self.__ensure_table_obj(name)
+        return self.__table_map[name]
+
+    def close(self):
+        self.__db.close()
+        self.__table_map = {}
+        # self.__binded_map  = {}
 
     def commit(self):
-        self.db.commit()
+        self.__db.commit()
 
-    def _create_manager_(self, name):
-        manager = MySQLManager(db=self.db, source=name)
-        return manager
+    def __create_table_obj(self, name):
+        table = Table(db=self.__db, name=name, mode=self.__mode)
+        return table
 
     def set_foreign_key_check(self, to_check):
         if to_check:
-            self.db.cursor().execute('SET foreign_key_checks = 1;')
+            self.__db.cursor().execute('SET foreign_key_checks = 1;')
         else:
-            self.db.cursor().execute('SET foreign_key_checks = 0;')
+            self.__db.cursor().execute('SET foreign_key_checks = 0;')
+
+    def is_table_existed(self, tablename):
+        self.__cursor.execute('show tables')
+        all_tablenames = [row[0].lower() for row in self.__cursor.fetchall()]
+        tablename = tablename.lower()
+
+        if tablename in all_tablenames:
+            return True
+        else:
+            return False
+
+    def create_table(self, tablename, columns, primary_key=None, force_recreate=False):
+        """
+        tablename: string
+        columns: list or tuples, with each element be a string like 'id INT NOT NULL UNIQUE'
+        primary_key: list or tuples, with elements be the column names
+        force_recreate: When table of the same name already exists, if this is True, drop that table; if False, raise exception
+        """
+        if self.is_table_existed(tablename):
+            if force_recreate:
+                self.drop_table(tablename)
+            else:
+                raise MonSQLException('TABLE ALREADY EXISTS')
+
+        columns_specs = ','.join(columns)
+        if primary_key is not None:
+            if len(primary_key) == 0:
+                raise MonSQLException('PRIMARY KEY MUST AT LEAST CONTAINS ONE COLUMN')
+
+            columns_specs += ',PRIMARY KEY(%s)' %(','.join(primary_key))
+
+        sql = 'CREATE TABLE %s(%s)' %(tablename, columns_specs)
+        self.__cursor.execute(sql)
+        self.__db.commit()
+
+    def drop_table(self, tablename, slient=False):
+        """
+        Drop a table
+        tablename: string
+        slient: boolean. When the table doesn't exists, this be False will raise an exception; otherwise no action will be taken
+        """
+        if not self.is_table_existed(tablename) and not slient:
+            raise MonSQLException('TABLE %s DOES NOT EXIST' %tablename)
+
+        self.__cursor.execute('DROP TABLE IF EXISTS %s' %(tablename))
+        self.__db.commit()
+

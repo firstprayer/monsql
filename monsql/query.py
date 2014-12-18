@@ -7,17 +7,22 @@ from datetime import datetime, date
 TODO: When using Query as source, not defining fields will lead to some problem, try to fix it
 """
 class Query:
-    def __init__(self, source=None, filter=None, fields=None, sort=None, alias=None):
+    def __init__(self, source=None, filter=None, fields=None, skip=0, limit=None, sort=None, alias=None):
         self.source = source
         self.filter = filter
         self.fields = fields
         self.sort = sort
+        self.limit = limit
+        self.skip  = skip
         self.alias = alias
+        
     def clone(self):
         return Query(source=copy.deepcopy(self.source), 
                  filter=copy.deepcopy(self.filter), 
                  fields=copy.deepcopy(self.fields), 
-                 sort=copy.deepcopy(self.sort), 
+                 skip=skip, 
+                 limit=limit,
+                 sort=copy.deepcopy(self.sort),
                  alias=copy.deepcopy(self.alias))   
 
     def set_filter_fields(self, obj):
