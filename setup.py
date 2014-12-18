@@ -5,6 +5,7 @@ setup(name='monsql',
       packages = find_packages(),
       author='firstprayer',
       author_email='zhangty10@gmail.com',
+      description='MonSQL - Mongodb-style way for using mysql.',
       url='https://github.com/firstprayer/monsql.git',
       install_requires=[
       	'MySQL-python'
