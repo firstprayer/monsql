@@ -37,11 +37,7 @@ class TRANSACTION_MODE:
 
 class Table:
     """
-    Usage:
-    select: result = manager.find({"id": 1})
-    insert: manager.insert({"name": "xxx"})
-    update: manager.update({"name": "xxx"}, {"name": "xxxx"})
-    delete: manager.remove({"id": 2})
+    This class should not be directly constructed. Should use MonSQL.get('name')
     """
     def __init__(self, db, name, mode=None):
         self.db = db
@@ -74,10 +70,22 @@ class Table:
         self.columns = columns
 
     def commit(self):
+        """
+        Commit the modification
+        """
         self.db.commit()
         return self
     
     def count(self, distinct=False, distinct_fields=None):
+        """
+        :Parameters: 
+
+        - distinct : boolean, whether use DISTINCT()
+        - distinct_fields : list or tuple or strings. Each string is a column name used inside COUNT(). 
+          If none, will use '*'
+
+        :Return: The number of rows
+        """
         if distinct_fields is None:
             field = '*'
         else:
@@ -99,11 +107,39 @@ class Table:
     
     def find(self, filter={}, fields=None, skip=0, limit=None, sort=None):
         """
-        @param:query(dict), specify the WHERE clause
-        {"name": "...", "id": ...}
-        @param: fields, specify what fields are needed
-        skip, limit: both integers, skip without defining limit is meaningless
-        @return a QuerySet object
+        :Examples:
+
+        >>> users = user_table.find({'id': {'$in': [10, 20]}, 'age': {'$gt': 20}}) # Complex query
+        >>> user_count = len(users)
+        >>> for user in users:
+        >>>     # Do something...
+        >>>     print user.id
+        >>> 
+        >>> users = user_table.find({}, sort=[('age', monsql.ASCENDING)]) # sort by age
+
+        Also support complex operators:
+
+        >>> {a: 1}                                  # a == 1
+        >>> {a: {$gt: 1}}                           # a > 1
+        >>> {a: {$gte: 1}}                          # a >= 1
+        >>> {a: {$lt: 1}}                           # a < 1
+        >>> {a: {$lte: 1}}                          # a <= 1
+        >>> {a: {$eq: 1}}                           # a == 1
+        >>> {a: {$in: [1, 2]}}                      # a == 1
+        >>> {a: {$contains: '123'}}                 # a like %123%
+        >>> {$not: condition}                       # !(condition)
+        >>> {$and: [condition1, condition2, ...]}   # condition1 and condition2
+        >>> {$or: [condition1, condition2, ...]}    # condition1 or condition2
+
+        :Parameters: 
+
+        - query(dict): specify the WHERE clause. One example is {"name": "...", "id": ...}    
+        - fields: specify what fields are needed
+        - skip, limit: both integers, skip without defining limit is meaningless
+        - sort: A list, each element is a two-item tuple, with the first item be the column name
+          and the second item be either monsql.ASCENDING or monsql.DESCENDING
+
+        :Return: a QuerySet object
         """
         if not fields:
             self.__ensure_columns()
@@ -115,10 +151,7 @@ class Table:
     
     def find_one(self, filter=None, fields=None, skip=0, sort=None):
         """
-        similar to find
-        @param: query(dict)
-        @param: values: specifying what attributes are needed
-        @return: a RowData contains all the attributes or None if the query fail
+        Similar to find. This method only retrieve one. If no row matches, return None
         """
         result = self.find(filter=filter, fields=fields, skip=skip, limit=1, sort=sort)
         if len(result) > 0:
@@ -129,8 +162,16 @@ class Table:
     
     def insert(self, data_or_list_of_data):
         """
-        @param:attributes(dict), specify the values clause
-        @return: id or list of ids of inserted row
+        :Examples:
+        
+        >>> user_table.insert({'username': 'Jude'}) # Insert one row
+        >>> user_table.insert([{'username': 'Andy'}, {'username': 'Julia'}, ...]) # Insert multiple rows
+
+        :Parameters:
+
+        - data_or_list_of_data: Either a dict or a list of dict
+
+        :Return: id or list of ids of inserted row
         """
         result = None
 
@@ -155,68 +196,94 @@ class Table:
         
         return result
 
-    """
-    @param: query(dict), specify the WHERE clause
-    @param: attributes(dict), specify the SET clause
-    @return success or not (boolean)
-    """
+    
     def update(self, query, attributes, upsert=False):
+        """
+        :Parameters: 
 
+        - query(dict), specify the WHERE clause
+        - attributes(dict), specify the SET clause
+        - upsert: boolean. If True, then when there's no row matches the query, insert the values
+
+        :Return: Number of rows updated or inserted
+        """
         if upsert:
             found_result = self.find_one(query)
             if not found_result:
-                return self.insert(attributes)
+                id = self.insert(attributes)
+                if id > 0:
+                    return 1
+                else:
+                    return 0
 
         sql = build_update(self.name, query, attributes)
         return self.cursor.execute(sql)
 
 
-    """
-    @param: query(dict), specify the WHERE clause
-    @return success or not(boolean)
-    """
+    
     def remove(self, filter=None):
+        """
+        :Parameters: 
+
+        - query(dict), specify the WHERE clause
+
+        :Return: Number of rows deleted
+        """
         sql = build_delete(table_name=self.name, condition=filter)
         return self.cursor.execute(sql)
 
 
 class MonSQL:
     """
-    Usage:
-    monsql = MonSQL(host, port, username, password, dbname)
-    Notice, in the DEFAULT case, one need to manually call monsql.commit() after insert/update/delete
+    MongoDB style of using MySQL
+
+    :Examples:
+
+    >>> monsql = MonSQL(host, port, username, password, dbname)
+    >>> user_table = monsql.get('user')
+    >>> activated_users = user_table.find({'state': 2})
+    >>> user_ids = user_table.insert([{'username': ...}, {'username': ...}, ...])
+    >>> user_table.commit() # OR monsql.commit()
+
     """
 
     def __init__(self, host='127.0.0.1', port=3306, username='', password='', dbname='test', mode=TRANSACTION_MODE.DEFAULT):
         self.__db = MySQLdb.Connect(host=host, port=port, user=username, passwd=password, db=dbname)
         self.__cursor = self.__db.cursor()
         self.__table_map = {}
-        # self.__binded_map  = {}
         self.__mode = mode
 
     def __ensure_table_obj(self, name):
         if not self.__table_map.has_key(name):
             self.__table_map[name] = self.__create_table_obj(name)
 
-    # def bind(self, name):
-    #     """
-    #     Bind a table name so that one can get the manager object simply by using monsql.TABLE_NAME instead
-    #     of using monsql.get(TABLE_NAME)
-    #     """
-    #     if hasattr(self, name):
-    #         raise MonSQLException('TABLE NAME CONFLICTS, PLEASE USE .get(...)')
-    #     self.__binded_map[name] = self.get(name)
-
     def get(self, name):
+        """
+        Return a Table object to perform operations on this table. 
+
+        Note that all tables returned by the samle MonSQL instance shared the same connection.
+
+        :Parameters:
+
+        - name: A table name
+
+        :Returns: A Table object
+        """
         self.__ensure_table_obj(name)
         return self.__table_map[name]
 
     def close(self):
+        """
+        Close the connection to the server
+        """
         self.__db.close()
         self.__table_map = {}
         # self.__binded_map  = {}
 
     def commit(self):
+        """
+        Commit the current session
+        """
         self.__db.commit()
 
     def __create_table_obj(self, name):
@@ -230,6 +297,9 @@ class MonSQL:
             self.__db.cursor().execute('SET foreign_key_checks = 0;')
 
     def is_table_existed(self, tablename):
+        """
+        Check whether the given table name exists in this database. Return boolean.
+        """
         self.__cursor.execute('show tables')
         all_tablenames = [row[0].lower() for row in self.__cursor.fetchall()]
         tablename = tablename.lower()
@@ -241,10 +311,15 @@ class MonSQL:
 
     def create_table(self, tablename, columns, primary_key=None, force_recreate=False):
         """
-        tablename: string
-        columns: list or tuples, with each element be a string like 'id INT NOT NULL UNIQUE'
-        primary_key: list or tuples, with elements be the column names
-        force_recreate: When table of the same name already exists, if this is True, drop that table; if False, raise exception
+        :Parameters:
+
+        - tablename: string
+        - columns: list or tuples, with each element be a string like 'id INT NOT NULL UNIQUE'
+        - primary_key: list or tuples, with elements be the column names
+        - force_recreate: When table of the same name already exists, if this is True, drop that table; if False, raise exception
+        
+        :Return: Nothing
+
         """
         if self.is_table_existed(tablename):
             if force_recreate:
@@ -266,8 +341,13 @@ class MonSQL:
     def drop_table(self, tablename, slient=False):
         """
         Drop a table
-        tablename: string
-        slient: boolean. When the table doesn't exists, this be False will raise an exception; otherwise no action will be taken
+
+        :Parameters:
+
+        - tablename: string
+        - slient: boolean. When the table doesn't exists, this be False will raise an exception; otherwise no action will be taken
+        
+        :Return: Nothing
         """
         if not self.is_table_existed(tablename) and not slient:
             raise MonSQLException('TABLE %s DOES NOT EXIST' %tablename)
@@ -276,6 +356,9 @@ class MonSQL:
         self.__db.commit()
 
     def truncate_table(self, tablename):
+        """
+        Use 'TRUNCATE TABLE' to truncate the given table
+        """
         self.__cursor.execute('TRUNCATE TABLE %s' %tablename)
         self.__db.commit()
 
