@@ -338,18 +338,20 @@ class MonSQL:
         self.__cursor.execute(sql)
         self.__db.commit()
 
-    def drop_table(self, tablename, slient=False):
+    def drop_table(self, tablename, silent=False):
         """
         Drop a table
 
         :Parameters:
 
         - tablename: string
-        - slient: boolean. When the table doesn't exists, this be False will raise an exception; otherwise no action will be taken
+        - slient: boolean. If false and the table doesn't exists an exception will be raised;
+          Otherwise it will be ignored
         
         :Return: Nothing
+
         """
-        if not self.is_table_existed(tablename) and not slient:
+        if not silent and not self.is_table_existed(tablename):
             raise MonSQLException('TABLE %s DOES NOT EXIST' %tablename)
 
         self.__cursor.execute('DROP TABLE IF EXISTS %s' %(tablename))
