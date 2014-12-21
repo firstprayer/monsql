@@ -37,7 +37,9 @@ class TRANSACTION_MODE:
 
 class Table:
     """
-    This class should not be directly constructed. Should use MonSQL.get('name')
+    A collection of related data entries in columns and rows.
+    This class should not be directly constructed. Instead use
+    MonSQL.get('table_name') to have a table returned.
     """
     def __init__(self, db, name, mode=None):
         self.db = db
@@ -71,7 +73,7 @@ class Table:
 
     def commit(self):
         """
-        Commit the modification
+        Commit the modification on table data.
         """
         self.db.commit()
         return self
@@ -81,10 +83,10 @@ class Table:
         :Parameters: 
 
         - distinct : boolean, whether use DISTINCT()
-        - distinct_fields : list or tuple or strings. Each string is a column name used inside COUNT(). 
-          If none, will use '*'
+        - distinct_fields : list or tuple or strings. Each string is a
+          column name used inside COUNT(). If none, will use '*'
 
-        :Return: The number of rows
+        :Return: int, the number of rows
         """
         if distinct_fields is None:
             field = '*'
@@ -151,7 +153,8 @@ class Table:
     
     def find_one(self, filter=None, fields=None, skip=0, sort=None):
         """
-        Similar to find. This method only retrieve one. If no row matches, return None
+        Similar to find. This method will only retrieve one row.
+        If no row matches, returns None
         """
         result = self.find(filter=filter, fields=fields, skip=skip, limit=1, sort=sort)
         if len(result) > 0:
@@ -261,7 +264,8 @@ class MonSQL:
         """
         Return a Table object to perform operations on this table. 
 
-        Note that all tables returned by the samle MonSQL instance shared the same connection.
+        Note that all tables returned by the same MonSQL instance share the same
+        connection.
 
         :Parameters:
 
@@ -274,7 +278,7 @@ class MonSQL:
 
     def close(self):
         """
-        Close the connection to the server
+        Close the connection to the database
         """
         self.__db.close()
         self.__table_map = {}
@@ -282,7 +286,7 @@ class MonSQL:
 
     def commit(self):
         """
-        Commit the current session
+        Commit changes in the current session
         """
         self.__db.commit()
 
@@ -298,7 +302,8 @@ class MonSQL:
 
     def is_table_existed(self, tablename):
         """
-        Check whether the given table name exists in this database. Return boolean.
+        Check whether a table with the given name exists in this database.
+        Returns boolean.
         """
         self.__cursor.execute('show tables')
         all_tablenames = [row[0].lower() for row in self.__cursor.fetchall()]
@@ -359,7 +364,7 @@ class MonSQL:
 
     def truncate_table(self, tablename):
         """
-        Use 'TRUNCATE TABLE' to truncate the given table
+        Removes entire contents of the table.
         """
         self.__cursor.execute('TRUNCATE TABLE %s' %tablename)
         self.__db.commit()
