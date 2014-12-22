@@ -26,9 +26,8 @@ class Query:
                  sort=copy.deepcopy(self.sort),
                  alias=copy.deepcopy(self.alias))   
 
-    def set_filter_fields(self, obj):
-        for key, value in obj.items():
-            self.filter[key] = value
+    def add_filter(self, obj):
+        self.filter = {'$and': [obj, self.filter]}
 
 def value_to_sql_str(v):
     if v is None:

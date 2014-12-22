@@ -154,6 +154,18 @@ class MonSQLBasicTest(BaseTestCase):
 			self.assertTrue(len(self.table_a.find({"number": i})) == 0)
 			self.assertTrue(len(self.table_a.find({"number": i - 100})) == 1)
 
+	def test_limit(self):
+		self._insert_some_row_to_table_one(10)
+
+		full_rows = self.table_a.find().values()
+
+		rows_with_limit = self.table_a.find(limit=5).values()
+		rows_with_limit_and_skip = self.table_a.find(limit=5, skip=5).values()
+
+		self.assertEqual(full_rows[: 5], rows_with_limit)
+		self.assertEqual(full_rows[5: ], rows_with_limit_and_skip)
+
+
 	# def test_table_join(self):
 	# 	random_id = str(uuid.uuid1());
 
