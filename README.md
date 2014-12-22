@@ -56,3 +56,12 @@ See? It's just that easy.
 	db.create_table('test_table', [('id INT NOT NULL', 'name VARCHAR(50)')])
 	db.truncate_table('test_table')
 	db.drop_table('test_table')
+
+### TODO:
+
+Pending functionalities include but not limited to:
+
+1.  Add <code>filter</code> parameter to <code>Table.count</code>. The filter parameter corresponds to the WHERE clause in <code>SELECT COUNT() FROM ... WHERE </code>
+
+2.  Add <code>using</code> parameter to <code>Table.remove</code>. This parameter corresponds to the USING clause in <code>DELETE FROM A USING ... WHERE ...</code>
+
