@@ -1,8 +1,10 @@
 #encoding=utf-8
 
 """
-This is a module for using mysql as simple as using mongodb
-Support mongodb manipulation like:
+This module provides an interface for using MySQL as simple as that
+of MongoDB.
+
+Supports MongoDB manipulation like:
 
 * find(queryObj, fieldObject)
 * find_one(queryObj, fieldObject)
@@ -11,14 +13,20 @@ Support mongodb manipulation like:
 * update(queryObj, keyValueObj)
 * remove(queryObj)
 
-The design for this module would take **Pymongo** as a reference
+The design for this module would take **Pymongo** as a reference.
 
-Since it's a module for mysql, transaction must be considered, so we also provide:
+Since it's a module for MySQL, transaction must be considered.
+Therefore we also provide:
+
 * commit(): commit the transaction
+
+Official documentation on MySQL operations can be found at
+http://dev.mysql.com/doc/
 
 We plan to Support Table join
 We would also support subquery
 """
+
 from config import ASCENDING, DESCENDING
 import MySQLdb
 import types
@@ -28,6 +36,7 @@ from query import Query
 from sql import build_select, build_update, build_delete, build_insert
 from queryset import QuerySet
 from exception import MonSQLException
+
 
 class TRANSACTION_MODE:
     AUTO = "auto"
@@ -73,18 +82,21 @@ class Table:
 
     def commit(self):
         """
-        Commit the modification on table data.
+        Ends current transaction, making permanent any changes made.
         """
         self.db.commit()
         return self
     
     def count(self, distinct=False, distinct_fields=None):
         """
+        Returns the number of rows satisying a criteria, if provided.
+        
         :Parameters: 
 
-        - distinct : boolean, whether use DISTINCT()
-        - distinct_fields : list or tuple or strings. Each string is a
-          column name used inside COUNT(). If none, will use '*'
+        - distinct : boolean, whether to use DISTINCT()
+        - distinct_fields : list or tuple or strings. Each string is
+          a column name used inside COUNT(). If none, '*' will be
+          used.
 
         :Return: int, the number of rows
         """
@@ -109,6 +121,8 @@ class Table:
     
     def find(self, filter={}, fields=None, skip=0, limit=None, sort=None):
         """
+        Searches the table using the filters provided.
+        
         :Examples:
 
         >>> users = user_table.find({'id': {'$in': [10, 20]}, 'age': {'$gt': 20}}) # Complex query
@@ -127,7 +141,7 @@ class Table:
         >>> {a: {$lt: 1}}                           # a < 1
         >>> {a: {$lte: 1}}                          # a <= 1
         >>> {a: {$eq: 1}}                           # a == 1
-        >>> {a: {$in: [1, 2]}}                      # a == 1
+        >>> {a: {$in: [1, 2]}}                      # a == 1 or a == 2
         >>> {a: {$contains: '123'}}                 # a like %123%
         >>> {$not: condition}                       # !(condition)
         >>> {$and: [condition1, condition2, ...]}   # condition1 and condition2
@@ -165,6 +179,8 @@ class Table:
     
     def insert(self, data_or_list_of_data):
         """
+        Insert data into the table.
+        
         :Examples:
         
         >>> user_table.insert({'username': 'Jude'}) # Insert one row
@@ -202,6 +218,8 @@ class Table:
     
     def update(self, query, attributes, upsert=False):
         """
+        Updates data in the table.
+        
         :Parameters: 
 
         - query(dict), specify the WHERE clause
@@ -226,6 +244,8 @@ class Table:
     
     def remove(self, filter=None):
         """
+        Removes rows from the table.
+        
         :Parameters: 
 
         - query(dict), specify the WHERE clause
@@ -264,8 +284,8 @@ class MonSQL:
         """
         Return a Table object to perform operations on this table. 
 
-        Note that all tables returned by the same MonSQL instance share the same
-        connection.
+        Note that all tables returned by the same MonSQL instance
+        share the same connection.
 
         :Parameters:
 
@@ -278,7 +298,7 @@ class MonSQL:
 
     def close(self):
         """
-        Close the connection to the database
+        Close the connection to the database.
         """
         self.__db.close()
         self.__table_map = {}
@@ -286,7 +306,7 @@ class MonSQL:
 
     def commit(self):
         """
-        Commit changes in the current session
+        Commit changes in the current session.
         """
         self.__db.commit()
 
@@ -302,7 +322,8 @@ class MonSQL:
 
     def is_table_existed(self, tablename):
         """
-        Check whether a table with the given name exists in this database.
+        Check whether a table with the given name exists in the
+        database.
         Returns boolean.
         """
         self.__cursor.execute('show tables')
@@ -316,6 +337,8 @@ class MonSQL:
 
     def create_table(self, tablename, columns, primary_key=None, force_recreate=False):
         """
+        Creates a table in the database.
+        
         :Parameters:
 
         - tablename: string
@@ -345,7 +368,8 @@ class MonSQL:
 
     def drop_table(self, tablename, silent=False):
         """
-        Drop a table
+        Drops a table from the database. The table is completely
+        removed.
 
         :Parameters:
 
@@ -364,7 +388,8 @@ class MonSQL:
 
     def truncate_table(self, tablename):
         """
-        Removes entire contents of the table.
+        Removes entire contents of the table, while leaving the
+        table and related indexes intact.
         """
         self.__cursor.execute('TRUNCATE TABLE %s' %tablename)
         self.__db.commit()
