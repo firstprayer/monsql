@@ -7,23 +7,27 @@ from exception import MonSQLException
 class DataRow:
 
     def __init__(self, keyvalue_map):
-        self.data = keyvalue_map
+        self.__data = keyvalue_map
 
     def __getattr__(self, attrname):
+
         if self.data.has_key(attrname):
             return self.data[attrname]
         else:
             raise AttributeError('%s does not exist' %attrname)
 
-    def __setattr(self, attrname, value):
-        self.data[attrname] = value
+    @property
+    def data(self):
+        return self.__data
 
 
 
-"""
-Lazy load data
-"""
+
+
 class QuerySet:
+    """
+    Lazy load data
+    """
 
     def __init__(self, cursor, query):
         self.cursor = cursor
@@ -69,9 +73,34 @@ class QuerySet:
         self._need_to_refetch_data = False
 
     def filter(self, filter):
+        """
+        Add new filter to the query set. Note that since QuerySet is lazy, it would
+        just combine this filter with the original filter with an 'AND'
+        :Parameters: 
+        - filter: a dictionary
+        :Return: a new QuerySet object
+        """
         new_query_set = self.clone()
-        new_query_set.query.set_filter_fields(filter)
+        new_query_set.query.add_filter(filter)
         
+        return new_query_set
+
+    def limit(self, n, skip=None):
+        """
+        Limit the result set. However when the query set already has limit field before,
+        this would raise an exception
+        :Parameters:
+        - n : The maximum number of rows returned
+        - skip: how many rows to skip
+        :Return: a new QuerySet object so we can chain operations
+        """
+        if self.query.limit is not None:
+            raise MonSQLException('LIMIT already defined')
+
+        new_query_set = self.clone()
+        new_query_set.query.limit = n
+        new_query_set.query.skip = skip
+
         return new_query_set
 
     def clone(self):
@@ -85,5 +114,5 @@ class QuerySet:
         raise Exception('NOT IMPLEMENTED')
 
     def values(self):
-        return [v for v in self]
+        return [v.data for v in self]
 
