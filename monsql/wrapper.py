@@ -291,6 +291,10 @@ class MonSQL:
         return table
 
     def set_foreign_key_check(self, to_check):
+        """
+        Enable/disable foreign key check. Disabling this is especially useful when
+        deleting from a table with foreign key pointing to itself
+        """
         if to_check:
             self.__db.cursor().execute('SET foreign_key_checks = 1;')
         else:

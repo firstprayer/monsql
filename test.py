@@ -165,7 +165,9 @@ class MonSQLBasicTest(BaseTestCase):
 		self.assertEqual(full_rows[: 5], rows_with_limit)
 		self.assertEqual(full_rows[5: ], rows_with_limit_and_skip)
 
-
+	def test_query_set(self):
+		pass # TODO
+		
 	# def test_table_join(self):
 	# 	random_id = str(uuid.uuid1());
 
