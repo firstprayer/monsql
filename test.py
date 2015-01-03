@@ -32,9 +32,17 @@ class MonSQLMetaOperationTest(BaseTestCase):
             table_obj.insert({'id': id})
         self.monsql.commit()
 
-        assert table_obj.count() == 10
+        self.assertTrue(table_obj.count() == 10)
+        for id in range(10):
+            table_obj.insert({'id': id})
+
+        self.assertEqual(table_obj.count(), 20)
+        self.assertEqual(table_obj.count(distinct=True), 10)
+        self.assertEqual(table_obj.count(query={'id': 2}), 2)
+        self.assertEqual(table_obj.count(distinct=True, query={'id': 2}), 1)
+
         self.monsql.truncate_table(tablename)
-        assert table_obj.count() == 0
+        self.assertTrue(table_obj.count() == 0)
 
         is_exception_raised = False
         
@@ -45,7 +53,7 @@ class MonSQLMetaOperationTest(BaseTestCase):
         self.assertTrue(is_exception_raised)
 
         self.monsql.create_table(tablename, [('id INT')], primary_key=['id'], force_recreate=True)
-        assert self.monsql.is_table_existed(tablename)
+        self.assertTrue(self.monsql.is_table_existed(tablename))
 
         self.monsql.drop_table(tablename)
         self.assertFalse(self.monsql.is_table_existed(tablename))

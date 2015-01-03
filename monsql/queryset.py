@@ -21,9 +21,6 @@ class DataRow:
         return self.__data
 
 
-
-
-
 class QuerySet:
     """
     Lazy load data
@@ -58,7 +55,7 @@ class QuerySet:
         sql = build_select(self.query)
         # print sql
         self.cursor.execute(sql)
-        # Wrap the data into dictionaries
+
         data_list = self.cursor.fetchall()
         values = self.query.fields
         result_list = []
@@ -85,6 +82,7 @@ class QuerySet:
         
         return new_query_set
 
+
     def limit(self, n, skip=None):
         """
         Limit the result set. However when the query set already has limit field before,
@@ -103,15 +101,29 @@ class QuerySet:
 
         return new_query_set
 
+
+    def distinct(self):
+        """
+        Only return distinct row. 
+        Return a new query set with distinct mark
+        """
+        new_query_set = self.clone()
+        new_query_set.query.distinct = True
+        return new_query_set
+
+
     def clone(self):
         return QuerySet(cursor=self.cursor, query=self.query.clone())
+
 
     def exists(self):
         return len(self) > 0
 
+
     def sort(self, sort):
         self._need_to_refetch_data = True
         raise Exception('NOT IMPLEMENTED')
+
 
     def values(self):
         return [v.data for v in self]

@@ -14,7 +14,7 @@ def from_none_to_null(v):
 def build_query(query):
     return QueryCondition(query).to_sql()
 
-def build_select_query(table_name, values, query, sort=None, skip=0, limit=None):
+def build_select_query(table_name, values, query, sort=None, skip=0, limit=None, distinct=False):
 
     value_str = ""
     for index, field in enumerate(values):
@@ -32,7 +32,12 @@ def build_select_query(table_name, values, query, sort=None, skip=0, limit=None)
         query_str = u"WHERE " + query_str
     else:
         query_str = ""
+
+    if distinct:
+        value_str = 'DISTINCT(%s)' %value_str
+
     sql = u"""SELECT %s FROM %s %s""" %(value_str, table_name, query_str)
+    
     if sort:
         sort_strings = []
 
@@ -51,15 +56,21 @@ def build_select_query(table_name, values, query, sort=None, skip=0, limit=None)
     if limit is not None:
         sql = '%s LIMIT %d,%d' %(sql, skip, limit)
 
-    # sprint sql
     return sql
 
-# TODO: Allow user to give the subquery an alias
+
 def build_select(query_obj):
+    """
+    Given a Query obj, return the corresponding sql
+    """
     return build_select_query(query_obj.source, query_obj.fields, query_obj.filter, skip=query_obj.skip, \
-                              limit=query_obj.limit, sort=query_obj.sort)
+                              limit=query_obj.limit, sort=query_obj.sort, distinct=query_obj.distinct)
+
 
 def build_insert(table_name, attributes):
+    """
+    Given the table_name and the data, return the sql to insert the data
+    """
     sql = "INSERT INTO %s" %(table_name)
     column_str = u""
     value_str = u""
@@ -72,6 +83,7 @@ def build_insert(table_name, attributes):
     sql = sql + u"(%s) VALUES(%s)" %(column_str, value_str)
     return sql
 
+
 def build_delete(table_name, condition):
     query_str = build_query(condition)
     if not query_str:
@@ -80,6 +92,7 @@ def build_delete(table_name, condition):
         query_str = u"WHERE " + query_str
     sql = u"DELETE FROM %s %s" %(table_name, query_str)
     return sql
+
 
 def build_update(table_name, condition, attributes):
     sql = u"UPDATE %s SET " %(table_name)    

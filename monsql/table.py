@@ -4,7 +4,7 @@ from logging import Logger
 from config import TRANSACTION_MODE
 from query import Query
 from queryset import QuerySet
-from sql import build_select, build_update, build_delete, build_insert
+from sql import build_query, build_select, build_update, build_delete, build_insert
   
 
 class Table:
@@ -52,7 +52,7 @@ class Table:
 
 
     def __ensure_columns(self):
-        if self.columns:
+        if self.columns is not None:
             return True
         self.fetch_columns()
         return True
@@ -66,12 +66,13 @@ class Table:
         return self
     
 
-    def count(self, distinct=False, distinct_fields=None):
+    def count(self, query=None, distinct=False, distinct_fields=None):
         """
         Returns the number of rows satisying a criteria, if provided.
         
         :Parameters: 
 
+        - query: specify the WHERE clause
         - distinct : boolean, whether to use DISTINCT()
         - distinct_fields : list or tuple or strings. Each string is
           a column name used inside COUNT(). If none, '*' will be
@@ -80,7 +81,11 @@ class Table:
         :Return: int, the number of rows
         """
         if distinct_fields is None:
-            field = '*'
+            self.__ensure_columns()
+            if distinct:
+                field = ','.join(self.columns)
+            else:
+                field = '*'
         else:
             field = ','.join(distinct_fields)
 
@@ -88,9 +93,16 @@ class Table:
             count_str = 'DISTINCT(%s)' %(field)
         else:
             count_str = field
+
         count_str = 'COUNT(%s)' %(count_str)
 
         sql = 'SELECT %s FROM %s' %(count_str, self.name)
+
+        if query is not None:
+            query_str = build_query(query)
+            if query_str:
+                sql = sql + ' WHERE ' + query_str
+
         self.cursor.execute(sql)
         count = self.cursor.fetchone()[0]
 

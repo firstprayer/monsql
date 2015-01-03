@@ -4,30 +4,31 @@ import copy, types
 from datetime import datetime, date
 from exception import MonSQLException
 
-"""
-TODO: When using Query as source, not defining fields will lead to some problem, try to fix it
-"""
+
 class Query:
-    def __init__(self, source=None, filter=None, fields=None, skip=0, limit=None, sort=None, alias=None):
+    def __init__(self, source=None, filter=None, fields=None, skip=0, limit=None, sort=None, distinct=False, alias=None):
         self.source = source
         self.filter = filter
         self.fields = fields
         self.sort = sort
         self.limit = limit
         self.skip  = skip
+        self.distinct = distinct
         self.alias = alias
 
     def clone(self):
         return Query(source=copy.deepcopy(self.source), 
                  filter=copy.deepcopy(self.filter), 
                  fields=copy.deepcopy(self.fields), 
-                 skip=skip, 
-                 limit=limit,
+                 skip=self.skip, 
+                 limit=self.limit,
                  sort=copy.deepcopy(self.sort),
+                 distinct=self.distinct,
                  alias=copy.deepcopy(self.alias))   
 
     def add_filter(self, obj):
         self.filter = {'$and': [obj, self.filter]}
+
 
 def value_to_sql_str(v):
     if v is None:
@@ -46,6 +47,7 @@ def value_to_sql_str(v):
         return "'%s'" %(v.strftime("%Y-%m-%d"))
 
     return str(v)
+
 
 class QueryCondition:
 
