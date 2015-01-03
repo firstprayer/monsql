@@ -23,6 +23,7 @@ We would also support subquery
 from config import TRANSACTION_MODE
 from exception import MonSQLException
 from table import Table
+from queryset import DataRow
 import abc
 
 class Database:
@@ -31,7 +32,7 @@ class Database:
 
     :Examples:
 
-    >>> monsql = MonSQL(host, port, username, password, dbname)
+    >>> monsql = MonSQL(host, port, username, password, dbname, DBTYPES.MYSQL)
     >>> user_table = monsql.get('user')
     >>> activated_users = user_table.find({'state': 2})
     >>> user_ids = user_table.insert([{'username': ...}, {'username': ...}, ...])
@@ -66,7 +67,8 @@ class Database:
 
     @abc.abstractmethod
     def get_table_obj(self, name):
-        """Implemented by subclasses, because different database may use different table class"""
+        """This is used internally inside the class
+        Implemented by subclasses, because different database may use different table class"""
         pass
 
     @abc.abstractmethod
@@ -181,6 +183,37 @@ class Database:
 
         self.__cursor.execute('DROP TABLE IF EXISTS %s' %(tablename))
         self.__db.commit()
+
+
+    def raw(self, sql):
+        """
+        Execute raw sql
+        :Parameters:
+
+        - sql: string, sql to be executed
+
+        :Return: the result of this execution
+
+        If it's a select, return a list with each element be a DataRow instance
+
+        Otherwise return raw result from the cursor (Should be insert or update or delete)
+
+        """
+        res = self.cursor.execute(sql)
+        if self.cursor.description is None:
+            return res
+
+        rows = self.cursor.fetchall()
+        columns = [d[0] for d in self.cursor.description]
+
+        structured_rows = []
+        for row in rows:
+            data = {}
+            for val, col in zip(row, columns):
+                data[col] = val
+            structured_rows.append(DataRow(data))
+
+        return structured_rows
 
     
 

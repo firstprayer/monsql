@@ -136,5 +136,18 @@ class MonSQLBasicTest(BaseTestCase):
 
         self.assertEqual(self.table_a.find(fields=['date']).distinct().count, 1)
 
+    def test_raw(self):
+        self._insert_some_row_to_table_one(10)
+        rows = self.monsql.raw('select * from %s' %self.table_a.name)
+        for idx, row in enumerate(rows):
+            self.assertEqual(row.number, idx)
+        
+        self.monsql.raw('update %s set number=100000' %self.table_a.name)
+        self.monsql.commit()
+
+        self.assertEqual(self.table_a.find({'number': 1}).count, 0)
+        self.assertEqual(self.table_a.find({'number': 100000}).count, 10)
+        self.monsql.commit()
+
 
 
