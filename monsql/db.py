@@ -27,7 +27,7 @@ import abc
 
 class Database:
     """
-    MongoDB style of using MySQL
+    MongoDB style of using Relational Database
 
     :Examples:
 
@@ -45,6 +45,9 @@ class Database:
         self.__table_map = {}
         self.__mode = mode
 
+    """
+    Properties for accessibility to subclasses
+    """
     @property
     def cursor(self):
         return self.__cursor
@@ -61,11 +64,31 @@ class Database:
         if not self.__table_map.has_key(name):
             self.__table_map[name] = self.get_table_obj(name)
 
+    @abc.abstractmethod
+    def get_table_obj(self, name):
+        """Implemented by subclasses, because different database may use different table class"""
+        pass
+
+    @abc.abstractmethod
+    def list_tables(self):
+        """
+        Return a list of lower case table names. Different databases have their own ways to 
+        do this, so leave the implementation to the subclasses
+        """
+        pass
+
+    @abc.abstractmethod
+    def truncate_table(self, tablename):
+        """Delete all rows in a table. 
+        Not all databases support built-in truncate, so implementation is left
+        to subclasses. For those don't support truncate, 'delete from ...' is used """
+        pass
+
     def get(self, name):
         """
         Return a Table object to perform operations on this table. 
 
-        Note that all tables returned by the samle MonSQL instance shared the same connection.
+        Note that all tables returned by the samle Database instance shared the same connection.
 
         :Parameters:
 
@@ -82,18 +105,13 @@ class Database:
         """
         self.__db.close()
         self.__table_map = {}
-        # self.__binded_map  = {}
 
     def commit(self):
         """
         Commit the current session
         """
         self.__db.commit()
-
-    @abc.abstractmethod
-    def get_table_obj(self, name):
-        pass
-
+    
     def set_foreign_key_check(self, to_check):
         """
         Enable/disable foreign key check. Disabling this is especially useful when
@@ -103,14 +121,6 @@ class Database:
             self.__db.cursor().execute('SET foreign_key_checks = 1;')
         else:
             self.__db.cursor().execute('SET foreign_key_checks = 0;')
-
-    @abc.abstractmethod
-    def list_tables(self):
-        """
-        Return a list of lower case table names
-        """
-        pass
-
 
     def is_table_existed(self, tablename):
         """
@@ -172,7 +182,5 @@ class Database:
         self.__cursor.execute('DROP TABLE IF EXISTS %s' %(tablename))
         self.__db.commit()
 
-    @abc.abstractmethod
-    def truncate_table(self, tablename):
-        pass
+    
 

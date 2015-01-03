@@ -21,7 +21,9 @@ class MySQLTable(Table):
             columns.append(column)
         self.columns = columns
 
+
 class MySQL(Database):
+
     def __init__(self, host='127.0.0.1', port=3306, username='', password='',
                  dbname='test', mode=TRANSACTION_MODE.DEFAULT):
         db = MySQLdb.Connect(host=host, port=port, user=username,
@@ -43,3 +45,5 @@ class MySQL(Database):
         """
         self.cursor.execute('TRUNCATE TABLE %s' %tablename)
         self.db.commit()
+
+        

@@ -8,7 +8,7 @@ from sql import build_select, build_update, build_delete, build_insert
 
 class Table:
     """
-    This class should not be directly constructed. Should use MonSQL.get('name')
+    This class should not be directly constructed. Should use Database.get('name')
     """
     def __init__(self, db, name, mode=None):
         self.db = db
@@ -32,21 +32,18 @@ class Table:
         def fdel(self):
             del self._columns
         return locals()
-        
+
     columns = property(**columns())
 
-    def _log_(self, log_info):
-        print log_info
+    @abc.abstractmethod
+    def fetch_columns(self):
+        pass
 
     def __ensure_columns(self):
         if self.columns:
             return True
         self.fetch_columns()
         return True
-
-    @abc.abstractmethod
-    def fetch_columns(self):
-        pass
 
     def commit(self):
         """
@@ -82,8 +79,6 @@ class Table:
 
         return count
 
-    
-    
     def find(self, filter={}, fields=None, skip=0, limit=None, sort=None):
         """
         :Examples:
@@ -126,7 +121,6 @@ class Table:
 
         query_obj = Query(source=self.name, filter=filter, fields=fields, skip=skip, limit=limit, sort=sort)
         return QuerySet(cursor=self.cursor, query=query_obj)
-
     
     def find_one(self, filter=None, fields=None, skip=0, sort=None):
         """
@@ -138,7 +132,6 @@ class Table:
         else:
             return None
 
-    
     def insert(self, data_or_list_of_data):
         """
         :Examples:
@@ -174,7 +167,6 @@ class Table:
             result = insert_data(data_or_list_of_data)
         
         return result
-
     
     def update(self, query, attributes, upsert=False):
         """
@@ -197,8 +189,6 @@ class Table:
 
         sql = build_update(self.name, query, attributes)
         return self.cursor.execute(sql)
-
-
     
     def remove(self, filter=None):
         """

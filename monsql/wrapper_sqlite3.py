@@ -21,7 +21,9 @@ class SQLite3Table(Table):
             columns.append(column)
         self.columns = columns
 
+
 class SQLite3(Database):
+
     def __init__(self, file_path=None):
         if file_path is None: file_path = ":memory:"
         db = sqlite3.connect(file_path)
@@ -42,3 +44,5 @@ class SQLite3(Database):
         """
         self.get(tablename).remove()
         self.db.commit()
+
+        
