@@ -1,15 +1,24 @@
+# coding=utf-8
 import abc
 from logging import Logger
 from config import TRANSACTION_MODE
 from query import Query
 from queryset import QuerySet
 from sql import build_select, build_update, build_delete, build_insert
-
+  
 
 class Table:
     """
-    This class should not be directly constructed. Should use Database.get('name')
+    A collection of related data entries in columns and rows.
+    This class should not be directly constructed. Instead use
+    Database.get('table_name') to have a table returned.
     """
+
+    db = None
+    cursor = None
+    columns = None
+    name = None
+
     def __init__(self, db, name, mode=None):
         self.db = db
         self.cursor = db.cursor()
@@ -23,6 +32,7 @@ class Table:
 
         self.logger = Logger("std")
 
+
     def columns():
         doc = "The columns property."
         def fget(self):
@@ -35,9 +45,11 @@ class Table:
 
     columns = property(**columns())
 
+
     @abc.abstractmethod
     def fetch_columns(self):
         pass
+
 
     def __ensure_columns(self):
         if self.columns:
@@ -45,22 +57,27 @@ class Table:
         self.fetch_columns()
         return True
 
+
     def commit(self):
         """
-        Commit the modification
+        Ends current transaction, making permanent any changes made.
         """
         self.db.commit()
         return self
     
+
     def count(self, distinct=False, distinct_fields=None):
         """
+        Returns the number of rows satisying a criteria, if provided.
+        
         :Parameters: 
 
-        - distinct : boolean, whether use DISTINCT()
-        - distinct_fields : list or tuple or strings. Each string is a column name used inside COUNT(). 
-          If none, will use '*'
+        - distinct : boolean, whether to use DISTINCT()
+        - distinct_fields : list or tuple or strings. Each string is
+          a column name used inside COUNT(). If none, '*' will be
+          used.
 
-        :Return: The number of rows
+        :Return: int, the number of rows
         """
         if distinct_fields is None:
             field = '*'
@@ -79,8 +96,11 @@ class Table:
 
         return count
 
+
     def find(self, filter={}, fields=None, skip=0, limit=None, sort=None):
         """
+        Searches the table using the filters provided.
+        
         :Examples:
 
         >>> users = user_table.find({'id': {'$in': [10, 20]}, 'age': {'$gt': 20}}) # Complex query
@@ -99,7 +119,7 @@ class Table:
         >>> {a: {$lt: 1}}                           # a < 1
         >>> {a: {$lte: 1}}                          # a <= 1
         >>> {a: {$eq: 1}}                           # a == 1
-        >>> {a: {$in: [1, 2]}}                      # a == 1
+        >>> {a: {$in: [1, 2]}}                      # a == 1 or a == 2
         >>> {a: {$contains: '123'}}                 # a like %123%
         >>> {$not: condition}                       # !(condition)
         >>> {$and: [condition1, condition2, ...]}   # condition1 and condition2
@@ -122,9 +142,11 @@ class Table:
         query_obj = Query(source=self.name, filter=filter, fields=fields, skip=skip, limit=limit, sort=sort)
         return QuerySet(cursor=self.cursor, query=query_obj)
     
+
     def find_one(self, filter=None, fields=None, skip=0, sort=None):
         """
-        Similar to find. This method only retrieve one. If no row matches, return None
+        Similar to find. This method will only retrieve one row.
+        If no row matches, returns None
         """
         result = self.find(filter=filter, fields=fields, skip=skip, limit=1, sort=sort)
         if len(result) > 0:
@@ -132,8 +154,11 @@ class Table:
         else:
             return None
 
+
     def insert(self, data_or_list_of_data):
         """
+        Insert data into the table.
+        
         :Examples:
         
         >>> user_table.insert({'username': 'Jude'}) # Insert one row
@@ -168,8 +193,11 @@ class Table:
         
         return result
     
+
     def update(self, query, attributes, upsert=False):
         """
+        Updates data in the table.
+        
         :Parameters: 
 
         - query(dict), specify the WHERE clause
@@ -190,8 +218,11 @@ class Table:
         sql = build_update(self.name, query, attributes)
         return self.cursor.execute(sql)
     
+    
     def remove(self, filter=None):
         """
+        Removes rows from the table.
+        
         :Parameters: 
 
         - query(dict), specify the WHERE clause
