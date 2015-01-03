@@ -19,13 +19,13 @@ Since it's a module for mysql, transaction must be considered, so we also provid
 We plan to Support Table join
 We would also support subquery
 """
-import MySQLdb
-from exception import MonSQLException
+
 from config import TRANSACTION_MODE
+from exception import MonSQLException
 from table import Table
 
 
-class MonSQL:
+class Database:
     """
     MongoDB style of using MySQL
 
@@ -39,8 +39,8 @@ class MonSQL:
 
     """
 
-    def __init__(self, host='127.0.0.1', port=3306, username='', password='', dbname='test', mode=TRANSACTION_MODE.DEFAULT):
-        self.__db = MySQLdb.Connect(host=host, port=port, user=username, passwd=password, db=dbname)
+    def __init__(self, db, mode=TRANSACTION_MODE.DEFAULT):
+        self.__db = db
         self.__cursor = self.__db.cursor()
         self.__table_map = {}
         self.__mode = mode
