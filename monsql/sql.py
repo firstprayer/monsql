@@ -34,10 +34,10 @@ def build_select_query(table_name, values, query, sort=None, skip=0, limit=None,
         query_str = ""
 
     if distinct:
-        value_str = 'DISTINCT(%s)' %value_str
+        value_str = 'DISTINCT %s' %value_str
 
     sql = u"""SELECT %s FROM %s %s""" %(value_str, table_name, query_str)
-    
+
     if sort:
         sort_strings = []
 

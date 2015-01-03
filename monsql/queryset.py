@@ -36,9 +36,7 @@ class QuerySet:
     Python magic functions
     """
     def __len__(self):
-        if not self._data or self._need_to_refetch_data:
-            self._fetch_data()
-        return len(self._data)
+        return self.count
 
     def __iter__(self):
         if not self._data or self._need_to_refetch_data:
@@ -49,6 +47,13 @@ class QuerySet:
         if not self._data or self._need_to_refetch_data:
             self._fetch_data()
         return self._data[k]
+
+
+    @property
+    def count(self):
+        if not self._data or self._need_to_refetch_data:
+            self._fetch_data()
+        return len(self._data)
 
     def _fetch_data(self):
 

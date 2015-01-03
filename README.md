@@ -1,17 +1,18 @@
-MonSQL - Mongodb-style way for using mysql
+MonSQL - Light-weighted, MongoDB-style Wrapper for multiple Relational Databases
 ====================
-A mysql wrapper for easy interaction with MySQL using a mongodb-like interface. It's motivated by the fact that mongodb is so easy to use, even for a complete novince! This library is suitable for people don't know much about SQL syntax, but they can still manipulate mysql database through this very simple mongodb-style interface -- query, insert, update, all very easy to understand.  
+A light-weighted wrapper for easy interaction with Relational Databases using a mongodb-like interface. It's goal is to be easy to use, even for a complete novince! What's more, it supports seamless switching between different relational databases(currently supported: MySQL, SQLite3) 
 
 More documentation can be found [here](http://monsql.readthedocs.org/en/latest/)
 
 Usage:  
 
-	db = MonSQL(host, port, username, password, dbname)  
+	db = MonSQL(host, port, username, password, dbname, MonSQL.DB_TYPES.MYSQL)  
 
 Now assume you have a table called image. It works like this:  
 
 	image_tb = db.get('image')
 	img_cnt  = image_tb.count() # total number of rows
+	img_cnt  = image_tb.count(distinct=True) # total number of distinct rows
 
 **select**:
 	
@@ -46,7 +47,7 @@ Now assume you have a table called image. It works like this:
 
 **delete**
 
-	count = image_tb.remove({"id": 2})  
+	removed_count = image_tb.remove({"id": 2})  
 
 
 See? It's just that easy.  
@@ -61,7 +62,5 @@ See? It's just that easy.
 
 Pending functionalities include but not limited to:
 
-1.  Add <code>filter</code> parameter to <code>Table.count</code>. The filter parameter corresponds to the WHERE clause in <code>SELECT COUNT() FROM ... WHERE </code>
-
-2.  Add <code>using</code> parameter to <code>Table.remove</code>. This parameter corresponds to the USING clause in <code>DELETE FROM A USING ... WHERE ...</code>
+1.  Add <code>using</code> parameter to <code>Table.remove</code>. This parameter corresponds to the USING clause in <code>DELETE FROM A USING ... WHERE ...</code>
 
