@@ -14,8 +14,6 @@ class MonSQLBasicTest(BaseTestCase):
         super(MonSQLBasicTest, self).setUp()
 
         test_table_name_a = 'test_a_' + random_name()
-        # print test_table_name_a
-        # test_table_name_b = 'test_b_' + random_name()
 
         self.monsql.create_table(test_table_name_a, ['name VARCHAR(50)', 'number INT', 'datetime DATETIME', 'date DATE', 'double_number DOUBLE'])
         self.table_a = self.monsql.get(test_table_name_a)
@@ -124,6 +122,19 @@ class MonSQLBasicTest(BaseTestCase):
         self.assertEqual(full_rows[5: ], rows_with_limit_and_skip)
 
     def test_query_set(self):
-        pass # TODO
+        self._insert_some_row_to_table_one(10)
+        self._insert_some_row_to_table_one(10)
 
-        
+        query_set = self.table_a.find()
+        self.assertEqual(query_set.count, 20)
+        self.assertEqual(query_set.distinct().count, 10)
+        self.assertEqual(query_set.filter({'number': 1}).count, 2)
+        self.assertEqual(query_set.filter({'number': 1}).filter({'name': 'jude1'}).count, 2)
+
+        self.assertEqual(query_set.filter({'number': 1}).filter({'name': 'jude1'}).distinct().count, 1)
+        self.assertEqual(query_set.filter({'number': 1}).filter({'name': 'jude0'}).count, 0)
+
+        self.assertEqual(self.table_a.find(fields=['date']).distinct().count, 1)
+
+
+
