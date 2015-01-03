@@ -93,7 +93,7 @@ class QueryCondition:
                     if u'$not' == query_field:
                         not_condition = QueryCondition(query_value).to_sql()
                         if not_condition is not None:
-                            return '!(%s)' %(not_condition)
+                            return 'NOT (%s)' %(not_condition)
                         else:
                             return None
 

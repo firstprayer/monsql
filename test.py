@@ -32,7 +32,6 @@ class MonSQLMetaOperationTest(BaseTestCase):
             table_obj.insert({'id': id})
         self.monsql.commit()
 
-        print table_obj.count()
         assert table_obj.count() == 10
         self.monsql.truncate_table(tablename)
         assert table_obj.count() == 0

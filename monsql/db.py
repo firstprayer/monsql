@@ -23,7 +23,7 @@ We would also support subquery
 from config import TRANSACTION_MODE
 from exception import MonSQLException
 from table import Table
-
+import abc
 
 class Database:
     """
@@ -45,9 +45,21 @@ class Database:
         self.__table_map = {}
         self.__mode = mode
 
+    @property
+    def cursor(self):
+        return self.__cursor
+
+    @property
+    def db(self):
+        return self.__db
+
+    @property
+    def mode(self):
+        return self.__mode
+
     def __ensure_table_obj(self, name):
         if not self.__table_map.has_key(name):
-            self.__table_map[name] = self.__create_table_obj(name)
+            self.__table_map[name] = self.get_table_obj(name)
 
     def get(self, name):
         """
@@ -78,9 +90,9 @@ class Database:
         """
         self.__db.commit()
 
-    def __create_table_obj(self, name):
-        table = Table(db=self.__db, name=name, mode=self.__mode)
-        return table
+    @abc.abstractmethod
+    def get_table_obj(self, name):
+        pass
 
     def set_foreign_key_check(self, to_check):
         """
@@ -92,12 +104,19 @@ class Database:
         else:
             self.__db.cursor().execute('SET foreign_key_checks = 0;')
 
+    @abc.abstractmethod
+    def list_tables(self):
+        """
+        Return a list of lower case table names
+        """
+        pass
+
+
     def is_table_existed(self, tablename):
         """
         Check whether the given table name exists in this database. Return boolean.
         """
-        self.__cursor.execute('show tables')
-        all_tablenames = [row[0].lower() for row in self.__cursor.fetchall()]
+        all_tablenames = self.list_tables()
         tablename = tablename.lower()
 
         if tablename in all_tablenames:
@@ -153,10 +172,7 @@ class Database:
         self.__cursor.execute('DROP TABLE IF EXISTS %s' %(tablename))
         self.__db.commit()
 
+    @abc.abstractmethod
     def truncate_table(self, tablename):
-        """
-        Use 'TRUNCATE TABLE' to truncate the given table
-        """
-        self.__cursor.execute('TRUNCATE TABLE %s' %tablename)
-        self.__db.commit()
+        pass
 

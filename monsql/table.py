@@ -1,3 +1,4 @@
+import abc
 from logging import Logger
 from config import TRANSACTION_MODE
 from query import Query
@@ -22,22 +23,30 @@ class Table:
 
         self.logger = Logger("std")
 
+    def columns():
+        doc = "The columns property."
+        def fget(self):
+            return self._columns
+        def fset(self, value):
+            self._columns = value
+        def fdel(self):
+            del self._columns
+        return locals()
+        
+    columns = property(**columns())
+
     def _log_(self, log_info):
         print log_info
 
     def __ensure_columns(self):
         if self.columns:
             return True
-        self.__fetch_columns()
+        self.fetch_columns()
+        return True
 
-    def __fetch_columns(self):
-        sql = u"SHOW COLUMNS FROM %s" %(self.name)
-        self.cursor.execute(sql)
-        columns = []
-        for column in self.cursor.fetchall():
-            column = column[0]
-            columns.append(column)
-        self.columns = columns
+    @abc.abstractmethod
+    def fetch_columns(self):
+        pass
 
     def commit(self):
         """
