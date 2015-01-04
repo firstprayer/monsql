@@ -6,13 +6,17 @@
 Welcome to MonSQL's documentation!
 ==================================
 
+.. automodule:: monsql
+   :members: MonSQL
+
+
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: monsql
-   :members: ASCENDING, DESCENDING, MonSQL, Table, 
+   api
+
 
 Indices and tables
 ==================

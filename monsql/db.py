@@ -1,25 +1,5 @@
 #encoding=utf-8
 
-"""
-This is a module for using mysql as simple as using mongodb
-Support mongodb manipulation like:
-
-* find(queryObj, fieldObject)
-* find_one(queryObj, fieldObject)
-* insert(keyValueObj)
-* insert_batch(a list of keyValueObj)
-* update(queryObj, keyValueObj)
-* remove(queryObj)
-
-The design for this module would take **Pymongo** as a reference
-
-Since it's a module for mysql, transaction must be considered, so we also provide:
-* commit(): commit the transaction
-
-We plan to Support Table join
-We would also support subquery
-"""
-
 from config import TRANSACTION_MODE
 from exception import MonSQLException
 from table import Table
@@ -28,18 +8,8 @@ import abc
 
 class Database:
     """
-    MongoDB style of using Relational Database
-
-    :Examples:
-
-    >>> monsql = MonSQL(host, port, username, password, dbname, DBTYPES.MYSQL)
-    >>> user_table = monsql.get('user')
-    >>> activated_users = user_table.find({'state': 2})
-    >>> user_ids = user_table.insert([{'username': ...}, {'username': ...}, ...])
-    >>> user_table.commit() # OR monsql.commit()
-
+    Database wrapper for interaction with specific database
     """
-
     def __init__(self, db, mode=TRANSACTION_MODE.DEFAULT):
         self.__db = db
         self.__cursor = self.__db.cursor()
