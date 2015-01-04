@@ -37,23 +37,27 @@ Database
 ========
 
 .. autoclass:: monsql.db.Database
+    :members:	
 
 
 Table
 =====
 
 .. autoclass:: monsql.table.Table
+    :members:	
 
 
 QuerySet
 ========
 
 .. autoclass:: monsql.queryset.QuerySet
+    :members:	
 
 DataRow
 =======
 
 .. autoclass:: monsql.queryset.DataRow
+    :members:	
 
 
 .. vim: set spell spelllang=en:
