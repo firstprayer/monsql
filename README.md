@@ -58,9 +58,17 @@ See? It's just that easy.
 	db.truncate_table('test_table')
 	db.drop_table('test_table')
 
-### TODO:
+### Contribites:
+
+#### TODO:
 
 Pending functionalities include but not limited to:
 
 1.  Add <code>using</code> parameter to <code>Table.remove</code>. This parameter corresponds to the USING clause in <code>DELETE FROM A USING ... WHERE ...</code>
+
+More info in the issue page
+
+#### How to run tests locally
+
+The tests scripts in based on tests/config.yml file. Take a look at the tests/config.yml.orig and modify it to suite your need.
 
