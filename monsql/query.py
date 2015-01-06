@@ -79,7 +79,7 @@ class QueryCondition:
 
         """
         condition = self.condition
-        if condition is not None and len(condition.items()) > 0:
+        if condition:
             keys = condition.keys()
             if len(keys) > 1:
                 split_conditions = []
