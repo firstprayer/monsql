@@ -4,8 +4,8 @@ MongoDB style of using Relational Database
 
 :Examples:
 
->>> from monsql import MonSQL
->>> monsql = MonSQL(host, port, username, password, dbname, DBTYPES.MYSQL)
+>>> from monsql import MonSQL, DB_TYPES
+>>> monsql = MonSQL(host, port, username, password, dbname, DB_TYPES.MYSQL)
 >>> user_table = monsql.get('user')
 >>> activated_users = user_table.find({'state': 2})
 >>> user_ids = user_table.insert([{'username': ...}, {'username': ...}, ...])

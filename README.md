@@ -6,7 +6,7 @@ More documentation can be found [here](http://monsql.readthedocs.org/en/latest/)
 
 Usage:  
 
-	db = MonSQL(host, port, username, password, dbname, MonSQL.DB_TYPES.MYSQL)  
+	db = monsql.MonSQL(host, port, username, password, dbname, monsql.DB_TYPES.MYSQL)  
 
 Now assume you have a table called image. It works like this:  
 
