@@ -11,6 +11,16 @@ class Query:
     """
 
     def __init__(self, source=None, filter=None, fields=None, skip=0, limit=None, sort=None, distinct=False, alias=None):
+        """
+        source: table name
+        filter: filter condition in dictionary
+        fields: what columns are being selected
+        skip: int
+        limit: int
+        sort: sort by what column(s).
+        distinct: whether use DISTINCT
+        alias: No use for now
+        """
         self.source = source
         self.filter = filter
         self.fields = fields
@@ -31,7 +41,11 @@ class Query:
                  alias=copy.deepcopy(self.alias))   
 
     def add_filter(self, obj):
+        """
+        Add a filter condition. Return self
+        """
         self.filter = {'$and': [obj, self.filter]}
+        return self
 
 
 def value_to_sql_str(v):
@@ -64,7 +78,7 @@ class QueryCondition:
 
     def __init__(self, condition):
         """
-        condition: a dictionary, like {'id': 1} => id == 1
+        condition: a dictionary, example: {'id': 1} => id == 1
         """
         self.condition = condition
 
@@ -93,6 +107,7 @@ class QueryCondition:
             keys = condition.keys()
 
             if len(keys) > 1:
+                
                 # If in the form of {'a': 1, 'b': 2}, simplify to {'$and': [{'a': 1, 'b': 2}]}
                 split_conditions = []
                 for key in condition.keys():
