@@ -77,4 +77,4 @@ The tests scripts in based on tests/config.yml file. Take a look at the tests/co
 
 __The MIT License (MIT)__
 
-Copyright (c) 2014-2015 Taiyuan Zhang <taiyuanz@taiyuans-mbp.wv.cc.cmu.edu>
+Copyright (c) 2014-2015 Taiyuan Zhang <zhangty10@gmail.com>
