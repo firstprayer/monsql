@@ -72,3 +72,9 @@ More info in the issue page
 
 The tests scripts in based on tests/config.yml file. Take a look at the tests/config.yml.orig and modify it to suite your need.
 
+
+## license:
+
+__The MIT License (MIT)__
+
+Copyright (c) 2014-2015 Taiyuan Zhang <taiyuanz@taiyuans-mbp.wv.cc.cmu.edu>
