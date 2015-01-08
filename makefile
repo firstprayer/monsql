@@ -2,6 +2,9 @@
 test:
 	python test.py
 
+reqs:
+	pip install -r requirements.txt --use-mirrors
+
 doc: install
 	cd doc; make clean; make html
 
@@ -17,4 +20,4 @@ upload:
 clean:
 	rm monsql/*.pyc
 
-.PHONY: test install register upload clean
+.PHONY: test reqs install register upload clean
