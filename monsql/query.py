@@ -35,6 +35,9 @@ class Query:
 
 
 def value_to_sql_str(v):
+    """
+    transform a python variable to the appropriate representation in SQL
+    """
     if v is None:
         return 'null'
 
