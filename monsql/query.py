@@ -6,6 +6,10 @@ from exception import MonSQLException
 
 
 class Query:
+    """
+    Class contains all information need to do a 'SELECT' query
+    """
+
     def __init__(self, source=None, filter=None, fields=None, skip=0, limit=None, sort=None, distinct=False, alias=None):
         self.source = source
         self.filter = filter
@@ -56,6 +60,9 @@ class QueryCondition:
 
 
     def __init__(self, condition):
+        """
+        condition: a dictionary, like {'id': 1} => id == 1
+        """
         self.condition = condition
 
     def to_sql(self):
@@ -73,7 +80,7 @@ class QueryCondition:
         {a: {$contains: '123'}}             -> a like %123%
 
         And complex combination
-        {$not: condition}                   -> !(condition)
+        {$not: condition}                   -> NOT (condition)
         {$and: [condition1, condition2]}    -> condition1 and condition2
         {$or: [condition1, condition2]}     -> condition1 or condition2
 
@@ -81,16 +88,20 @@ class QueryCondition:
         condition = self.condition
         if condition:
             keys = condition.keys()
+
             if len(keys) > 1:
+                # If in the form of {'a': 1, 'b': 2}, simplify to {'$and': [{'a': 1, 'b': 2}]}
                 split_conditions = []
                 for key in condition.keys():
                     split_conditions.append({key: condition[key]})
 
                 return QueryCondition({'$and': split_conditions}).to_sql()
+
             else:
                 query_field, query_value = condition.items()[0]
 
                 if query_field in QueryCondition.COMPLEX_QUERY_INDICATOR:
+                    # This is a composite query
 
                     if u'$not' == query_field:
                         not_condition = QueryCondition(query_value).to_sql()
@@ -104,9 +115,11 @@ class QueryCondition:
                         if not isinstance(conditions, list) or len(conditions) < 2:
                             raise MonSQLException('QUERY VALUE FOR KEY %s MUST BE LIST WITH LENGTH BEING AT LEAST 2' %(query_field))
 
+                        # compute sub conditions recursively
                         conditions = map(lambda c: QueryCondition(c).to_sql(), conditions)
                         conditions = filter(lambda c: c is not None, conditions)
 
+                        # join them together
                         if len(conditions) > 0:
                             if query_field == u'$or':
                                 return ' OR '.join(conditions)
@@ -115,12 +128,15 @@ class QueryCondition:
                         else:
                             return None
                     else:
-                        raise Exception('Unsupport query_field')
+                        raise MonSQLException('Unsupport query_field')
                 else:
+                    # This is a one-field query like {'id': ...}
+
                     if query_field in QueryCondition.MYSQL_RESERVE_WORDS:
-                        query_field = "'%s'" %(query_field)
+                        query_field = "`%s`" %(query_field)
 
                     if not type(query_value) is types.DictType:
+                        # transform {'id': 1} to {'id': {'$eq': 1}} for convenience
                         query_value = {'$eq': query_value}
 
                     if len(query_value.keys()) > 1:
@@ -132,8 +148,8 @@ class QueryCondition:
 
                         return QueryCondition({'$and': split_conditions}).to_sql()
                     else:
-                        # The simple case of {a: {$eq: 1}}
-                        match_key = query_value.keys()[0]
+                        # The simple case of {a: {$complex_operator: 1}}
+                        match_key = query_value.keys()[0] # the complex operator
                         match_value = query_value[match_key]
 
                         query_str = None
