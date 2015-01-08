@@ -4,4 +4,4 @@ build/
 *egg-info*
 dist/
 .DS_Store
-*.yml
+tests/config.yml

@@ -68,9 +68,16 @@ Pending functionalities include but not limited to:
 
 More info in the issue page
 
-#### How to run tests locally
+### Tests
 
-The tests scripts in based on tests/config.yml file. Take a look at the tests/config.yml.orig and modify it to suite your need.
+#### Running tests from Travis CI:
+
+The project is integrated with [Travis CI][travis]. All required configurations have been placed in `.travis.yml`. Therefore, once you have forked the repository, all you need to do is simply [activate a Github webhook][activate-github-webhook]. See [Getting Started guide][travis-guide] for Travis CI.
+
+
+#### Running tests locally:
+
+To run tests locally requires you to manual configure some variables. These configurations values should be placed in `tests/config.yml` file. Simply copy `tests/config.yml.orig` to `tests/config.yml` and modify it to reflect correct values.
 
 
 ## license:
@@ -78,3 +85,8 @@ The tests scripts in based on tests/config.yml file. Take a look at the tests/co
 __The MIT License (MIT)__
 
 Copyright (c) 2014-2015 Taiyuan Zhang <zhangty10@gmail.com>
+
+
+[activate-github-webhook]:http://docs.travis-ci.com/user/getting-started/#Step-two%3A-Activate-GitHub-Webhook
+[travis]:https://travis-ci.org/
+[travis-guide]:http://docs.travis-ci.com/user/getting-started/
