@@ -3,7 +3,7 @@ test:
 	python test.py
 
 reqs:
-	pip install -r requirements.txt --use-mirrors
+	pip install -r requirements.txt
 
 doc: install
 	cd doc; make clean; make html
