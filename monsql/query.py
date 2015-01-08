@@ -104,9 +104,8 @@ class QueryCondition:
         """
         condition = self.condition
         if condition:
-            keys = condition.keys()
-
-            if len(keys) > 1:
+            # If the condition is not None nor empty
+            if len(condition.keys()) > 1:
                 
                 # If in the form of {'a': 1, 'b': 2}, simplify to {'$and': [{'a': 1, 'b': 2}]}
                 split_conditions = []
@@ -167,24 +166,24 @@ class QueryCondition:
                         return QueryCondition({'$and': split_conditions}).to_sql()
                     else:
                         # The simple case of {a: {$complex_operator: 1}}
-                        match_key = query_value.keys()[0] # the complex operator
-                        match_value = query_value[match_key]
+                        complex_operator = query_value.keys()[0] # the complex operator
+                        target_value = query_value[complex_operator]
 
                         query_str = None
-                        if u"$contains" == match_key:
-                            query_str = u"LIKE " + value_to_sql_str('%' + match_value + '%')
+                        if u"$contains" == complex_operator:
+                            query_str = u"LIKE " + value_to_sql_str('%' + target_value + '%')
 
-                        elif match_key in ('$eq', '$gte', '$gt', '$lt', '$lte'):
+                        elif complex_operator in ('$eq', '$gte', '$gt', '$lt', '$lte'):
                             map_dic = {'$eq': '=', '$gte': '>=', '$gt': '>', '$lt': '<', '$lte': '<='}
-                            query_str = map_dic[match_key] + value_to_sql_str(match_value)
+                            query_str = map_dic[complex_operator] + value_to_sql_str(target_value)
 
-                        elif u'$in' == match_key:
-                            if len(match_value) == 0:
+                        elif u'$in' == complex_operator:
+                            if len(target_value) == 0:
                                 query_str = u"IN (null) "
                             else:
-                                query_str = u"IN (" + u','.join([str(_v_) for _v_ in match_value]) + u") "
+                                query_str = u"IN (" + u','.join([str(_v_) for _v_ in target_value]) + u") "
                         else:
-                            raise MonSQLException(u"Unsupport complex query: %s" %(match_key))
+                            raise MonSQLException(u"Unsupport complex query: %s" %(complex_operator))
 
                         return query_field + ' ' + query_str
         else:
