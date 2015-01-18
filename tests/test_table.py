@@ -15,7 +15,7 @@ class MonSQLBasicTest(BaseTestCase):
 
         test_table_name_a = 'test_a_' + random_name()
 
-        self.monsql.create_table(test_table_name_a, ['name VARCHAR(50)', 'number INT', 'datetime DATETIME', 'date DATE', 'double_number DOUBLE'])
+        self.monsql.create_table(test_table_name_a, ['name VARCHAR(50)', 'number INT', 'datetime timestamp', 'date DATE', 'double_number DOUBLE PRECISION'])
         self.table_a = self.monsql.get(test_table_name_a)
 
     def tearDown(self):
@@ -150,4 +150,12 @@ class MonSQLBasicTest(BaseTestCase):
         self.monsql.commit()
 
 
+if __name__ == '__main__':
+    config_data = load_test_settings()
+    
+    runner = unittest.TextTestRunner(verbosity=2)
+    for dbtype in config_data['TARGET_DATABASES'].split(','):
+        print "Testing %s" %dbtype
+        os.environ['DB_TYPE'] = dbtype
 
+        unittest.main()

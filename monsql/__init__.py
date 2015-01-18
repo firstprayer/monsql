@@ -13,13 +13,15 @@ MongoDB style of using Relational Database
 
 """
 from config import *
-from wrapper_mysql import MySQL
-from wrapper_sqlite3 import SQLite3
+from wrapper_mysql import MySQLDatabase
+from wrapper_sqlite3 import SQLite3Database
+from wrapper_postgresql import PostgreSQLDatabase
 from exception import MonSQLException
 
 class DB_TYPES:
 	MYSQL = 'MySQL'
 	SQLITE3 = 'SQLite3'
+	POSTGRESQL = 'PostgreSQL'
 
 def MonSQL(host=None, port=None, username=None, password=None, dbname=None, dbpath=None, dbtype=None):
 	"""
@@ -29,8 +31,10 @@ def MonSQL(host=None, port=None, username=None, password=None, dbname=None, dbpa
 		raise MonSQLException('Database type must be specified')
 
 	if dbtype == DB_TYPES.MYSQL:
-		return MySQL(host, port, username, password, dbname)
+		return MySQLDatabase(host, port, username, password, dbname)
 	elif dbtype == DB_TYPES.SQLITE3:
-		return SQLite3(dbpath)
+		return SQLite3Database(dbpath)
+	elif dbtype == DB_TYPES.POSTGRESQL:
+		return PostgreSQLDatabase(host, port, username, password, dbname)
 	else:
 		raise MonSQLException('Database type %s not supported' %dbtype)

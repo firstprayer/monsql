@@ -54,7 +54,7 @@ def build_select_query(table_name, values, query, sort=None, skip=0, limit=None,
         sql = '''%s ORDER BY %s''' %(sql, ','.join(sort_strings))
 
     if limit is not None:
-        sql = '%s LIMIT %d,%d' %(sql, skip, limit)
+        sql = '%s LIMIT %d OFFSET %d' %(sql, limit, skip)
 
     return sql
 

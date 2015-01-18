@@ -22,7 +22,7 @@ class SQLite3Table(Table):
         self.columns = columns
 
 
-class SQLite3(Database):
+class SQLite3Database(Database):
 
     def __init__(self, file_path=None):
         if file_path is None: file_path = ":memory:"

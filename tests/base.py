@@ -37,6 +37,13 @@ class BaseTestCase(unittest.TestCase):
         elif dbtype == DB_TYPES.SQLITE3:
             self.monsql = MonSQL(dbpath=config_data['SQLITE3_PATH'],
                                  dbtype=dbtype)
+        elif dbtype == DB_TYPES.POSTGRESQL:
+            self.monsql = MonSQL(host=config_data['POSTGRESQL_HOST'], 
+                                 port=config_data['POSTGRESQL_PORT'], 
+                                 username=config_data['POSTGRESQL_USER'],
+                                 password=config_data['POSTGRESQL_PASSWORD'], 
+                                 dbname=config_data['POSTGRESQL_DB'], 
+                                 dbtype=dbtype)
         else:
             raise Exception('dbtype is incorrect')
 
