@@ -1,6 +1,12 @@
 MonSQL - Light-weighted, MongoDB-style Wrapper for multiple Relational Databases
 ====================
-A light-weighted wrapper for easy interaction with Relational Databases using a mongodb-like interface. It's goal is to be easy to use, even for a complete novince! What's more, it supports seamless switching between different relational databases(currently supported: MySQL, SQLite3) 
+A light-weighted wrapper for easy interaction with Relational Databases using a mongodb-like interface. It's goal is to be easy to use, even for a complete novince! What's more, it supports seamless switching between different relational databases
+
+**Currently supported database**
+
+*   MySQL
+*   SQLite3
+*   PostgreSQL
 
 More documentation can be found [here](http://monsql.readthedocs.org/en/latest/)
 
