@@ -28,7 +28,7 @@ class BaseTestCase(unittest.TestCase):
 
         if dbtype == DB_TYPES.MYSQL:
             self.monsql = MonSQL(host=config_data['MYSQL_HOST'], 
-                                 port=config_data['MYSQL_PORT'], 
+                                 port=int(config_data['MYSQL_PORT']), 
                                  username=config_data['MYSQL_USER'],
                                  password=config_data['MYSQL_PASSWORD'], 
                                  dbname=config_data['MYSQL_DB'], 
