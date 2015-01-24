@@ -43,3 +43,36 @@ class MonSQLMetaOperationTest(BaseTestCase):
 
         self.monsql.drop_table(tablename)
         self.assertFalse(self.monsql.is_table_existed(tablename))
+
+
+    def test_schema(self):
+        if hasattr(self.monsql, 'create_schema'):
+            schema_name = random_name()
+            tablename = random_name()
+            full_table_name = '%s.%s' %(schema_name, tablename)
+
+            # Not existed schema throws error
+            error_thrown = False
+            try:
+                self.monsql.create_table(full_table_name)
+            except Exception as e:
+                error_thrown = True
+
+            self.assertTrue(error_thrown)
+
+            self.monsql.create_schema(schema_name)
+            self.monsql.create_table(full_table_name, [('id INT')])
+            self.assertTrue(self.monsql.is_table_existed(full_table_name))
+            
+            # Non-empty schema cannot be directly dropped without cascade
+            error_thrown = False
+            try:
+                self.monsql.drop_schema(schema_name)
+            except:
+                error_thrown = True
+
+            self.assertTrue(error_thrown)
+
+            self.monsql.drop_schema(schema_name, cascade=True)
+
+            self.assertFalse(self.monsql.is_table_existed(full_table_name))

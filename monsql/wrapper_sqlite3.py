@@ -45,4 +45,5 @@ class SQLite3Database(Database):
         self.get(tablename).remove()
         self.db.commit()
 
+    
         
